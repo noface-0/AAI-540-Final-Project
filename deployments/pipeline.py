@@ -12,7 +12,7 @@ from sagemaker.sklearn.processing import SKLearnProcessor
 from sagemaker.processing import ProcessingInput, ProcessingOutput
 from sagemaker.workflow.steps import ProcessingStep
 
-from processing import extract_stock_data
+from processing.extract import extract_stock_data
 
 
 sagemaker_session = sagemaker.session.Session()
