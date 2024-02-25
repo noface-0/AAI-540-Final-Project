@@ -1,3 +1,5 @@
+import argparse
+
 from environments.base import StockTradingEnv
 from training.train_test import train, test
 from config.indicators import INDICATORS
@@ -89,4 +91,9 @@ def train_model(data=None):
 
 
 if __name__ == "__main__":
-    train_model()
+    parser = argparse.ArgumentParser(description="Process input data for training.")
+    parser.add_argument("--input-data", type=str, required=True,
+                        help="The input data.")
+    args = parser.parse_args()
+
+    train_model(args.input_data)
