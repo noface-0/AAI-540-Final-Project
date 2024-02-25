@@ -1,52 +1,53 @@
-import pandas as pd
+import os
+import json
 import boto3
-import awswrangler as wr
 import sagemaker
-from sagemaker.workflow.pipeline_context import PipelineSession
-from sagemaker.workflow.pipeline import Pipeline
+import sagemaker.session
+import awswrangler as wr
+
+from sagemaker.estimator import Estimator
+from sagemaker.inputs import TrainingInput
+from sagemaker.model_metrics import (
+    MetricsSource,
+    ModelMetrics,
+)
+from sagemaker.processing import (
+    ProcessingInput,
+    ProcessingOutput,
+    ScriptProcessor,
+)
+from sagemaker.sklearn.processing import SKLearnProcessor
+from sagemaker.workflow.conditions import ConditionLessThanOrEqualTo
+from sagemaker.workflow.condition_step import (
+    ConditionStep,
+    JsonGet,
+)
 from sagemaker.workflow.parameters import (
     ParameterInteger,
     ParameterString,
-    ParameterFloat,
 )
-from sagemaker.sklearn.processing import SKLearnProcessor
-from sagemaker.inputs import TrainingInput
-from sagemaker.processing import ProcessingInput, ProcessingOutput
-from sagemaker.estimator import Estimator
-from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+from sagemaker.workflow.pipeline import Pipeline
+from sagemaker.workflow.properties import PropertyFile
+from sagemaker.workflow.steps import (
+    ProcessingStep,
+    TrainingStep,
+)
 from sagemaker.workflow.step_collections import RegisterModel
 
 from processing.extract import extract_stock_data
 
 
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 sagemaker_session = sagemaker.session.Session()
 region = sagemaker_session.boto_region_name
 role = sagemaker.get_execution_role()
-pipeline_session = PipelineSession()
 default_bucket = sagemaker_session.default_bucket()
 
 s3_parquet_path = (
     f"s3://{default_bucket}/stock_data/extracted_stock_data.parquet"
 )
 local_path = "/opt/ml/processing/input/stock_dataset.parquet"
-
-processing_instance_count = ParameterInteger(
-    name="ProcessingInstanceCount", default_value=1
-)
-instance_type = ParameterString(
-    name="TrainingInstanceType", default_value="ml.m5.xlarge"
-)
-model_approval_status = ParameterString(
-    name="ModelApprovalStatus", default_value="PendingManualApproval"
-)
-batch_data = ParameterString(
-    name="BatchData",
-    default_value=s3_parquet_path,
-)
-
-model_path = f"s3://{default_bucket}/DLRModelTrain"
-model_package_name = "DRLModel"
-pipeline_name = "DRLPipeline"
 
 
 def s3_upload():
@@ -64,23 +65,80 @@ def s3_upload():
     print(f"Stock data saved to: {local_path}")
 
 
-def integrate_preprocessing(s3_parquet_path, role, pipeline_session):
-    sklearn_processor = SKLearnProcessor(
-        framework_version="1.2-1",
-        instance_type="ml.m5.xlarge",
-        instance_count=1,
-        base_job_name="sklearn-preprocess",
-        role=role,
-        sagemaker_session=pipeline_session,
+def get_session(region, default_bucket):
+    """Gets the sagemaker session based on the region.
+
+    Args:
+        region: the aws region to start the session
+        default_bucket: the bucket to use for storing the artifacts
+
+    Returns:
+        sagemaker.session.Session instance
+    """
+
+    boto_session = boto3.Session(region_name=region)
+
+    sagemaker_client = boto_session.client("sagemaker")
+    runtime_client = boto_session.client("sagemaker-runtime")
+    return sagemaker.session.Session(
+        boto_session=boto_session,
+        sagemaker_client=sagemaker_client,
+        sagemaker_runtime_client=runtime_client,
+        default_bucket=default_bucket,
     )
 
-    processor_args = sklearn_processor.run(
-        inputs=[
-            ProcessingInput(
-                source=batch_data, 
-                destination="/opt/ml/processing/input"
-            )
-        ],
+
+def get_pipeline(
+    region,
+    project_name=None,
+    model_package_group_name="DLRPackageGroup",
+    pipeline_name="DLRPipeline",
+    base_job_prefix="DLR",
+):
+    """Gets a SageMaker ML Pipeline instance working with on abalone data.
+
+    Args:
+        region: AWS region to create and run the pipeline.
+        processing_role: IAM role to create and run processing steps
+        training_role: IAM role to create and run training steps
+        data_bucket: the bucket to use for storing the artifacts
+
+    Returns:
+        an instance of a pipeline
+    """
+
+    sagemaker_session = get_session(region, default_bucket)
+
+    # parameters for pipeline execution
+    processing_instance_count = ParameterInteger(
+        name="ProcessingInstanceCount", default_value=1
+    )
+    processing_instance_type = ParameterString(
+        name="ProcessingInstanceType", default_value="ml.m5.xlarge"
+    )
+    training_instance_type = ParameterString(
+        name="TrainingInstanceType", default_value="ml.m5.xlarge"
+    )
+    model_approval_status = ParameterString(
+        name="ModelApprovalStatus", default_value="PendingManualApproval"
+    )
+    input_data = ParameterString(
+        name="InputDataUrl",
+        default_value=s3_parquet_path,
+    )
+    
+    sklearn_processor = SKLearnProcessor(
+        framework_version="0.23-1",
+        instance_type=processing_instance_type,
+        instance_count=processing_instance_count,
+        base_job_name=f"{base_job_prefix}/sklearn-preprocess",
+        sagemaker_session=sagemaker_session,
+        role=role
+    )
+    
+    step_process = ProcessingStep(
+        name="PreprocessDLRData",
+        processor=sklearn_processor,
         outputs=[
             ProcessingOutput(
                 output_name="train", 
@@ -95,24 +153,17 @@ def integrate_preprocessing(s3_parquet_path, role, pipeline_session):
                 source="/opt/ml/processing/test"
             ),
         ],
-        code="pipelines/preprocess.py",
+        code=os.path.join(BASE_DIR, "pipelines/preprocess.py"),
+        job_arguments=["--input-data", input_data],
     )
 
-    step_process = ProcessingStep(
-        name="PreprocessData", 
-        step_args=processor_args
-    )
-
-    return step_process
-
-
-def integrate_training(step_process):
+    model_path = f"s3://{default_bucket}/{base_job_prefix}/DLRModelTrain"
     rl_train = Estimator(
         image_uri=...,
         instance_type="ml.m5.xlarge",
         instance_count=1,
         output_path=model_path,
-        sagemaker_session=pipeline_session,
+        sagemaker_session=sagemaker_session,
         role=role,
     )
 
@@ -138,43 +189,29 @@ def integrate_training(step_process):
         step_args=train_args
     )
 
-    return rl_train, step_train
-
-
-def integrate_register(rl_train, step_train):
     step_register = RegisterModel(
-        name="DRLRegisterModel",
+        name="RegisterDLRModel",
         estimator=rl_train,
         model_data=step_train.properties.ModelArtifacts.S3ModelArtifacts,
         content_types=["application/x-parquet"],
-        response_types=["application/x-parquet"],
-        inference_instances=["ml.t2.medium", "ml.m5.xlarge"],
-        transform_instances=["ml.m5.xlarge"],
-        model_package_group_name=model_package_name,
+        response_types=["application/x-parquet"], 
+        inference_instances=["ml.t2.medium", "ml.m5.large"],
+        transform_instances=["ml.m5.large"],
+        model_package_group_name=model_package_group_name,
         approval_status=model_approval_status,
     )
-    return step_register
 
-
-if __name__ == "__main__":
-    # Extract and upload stock data to S3
-    upload_result = s3_upload()
-
-    step_process = integrate_preprocessing(
-        s3_parquet_path, role, pipeline_session
-    )
-    rl_train, step_train = integrate_training(step_process)
-
-    step_register = integrate_register(rl_train, step_train)
-
+    # pipeline instance
     pipeline = Pipeline(
         name=pipeline_name,
         parameters=[
+            processing_instance_type,
             processing_instance_count,
+            training_instance_type,
             model_approval_status,
-            batch_data,
+            input_data,
         ],
         steps=[step_process, step_train],
+        sagemaker_session=sagemaker_session,
     )
-    pipeline.upsert(role_arn=role)
-    execution = pipeline.start()
+    return pipeline

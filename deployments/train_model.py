@@ -12,7 +12,6 @@ from config.training import (
     AGENT
 )
 from utils.utils import get_var
-from processing.extract import extract_stock_data
 
 
 API_KEY = get_var("API_KEY")
@@ -21,7 +20,7 @@ API_BASE_URL = get_var("API_BASE_URL")
 
 
 
-def train_model():
+def train_model(data=None):
     # Initialize environment
     env = StockTradingEnv
 
@@ -31,7 +30,6 @@ def train_model():
     }
     params = agent_configs.get(AGENT)
 
-    data = extract_stock_data()
     # Training phase
     print("Starting training phase...")
     train(
