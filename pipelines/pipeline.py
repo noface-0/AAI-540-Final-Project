@@ -167,26 +167,23 @@ def get_pipeline(
         role=role,
     )
 
-    train_args = rl_train.fit(
+    step_train = TrainingStep(
+        name="DRLModelTrain",
+        estimator=rl_train,
         inputs={
             "train": TrainingInput(
-                s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
-                    "train"
-                ].S3Output.S3Uri,
+                s3_data=step_process.properties.
+                ProcessingOutputConfig.Outputs["train"].
+                S3Output.S3Uri,
                 content_type="application/x-parquet"
             ),
             "validation": TrainingInput(
-                s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
-                    "validation"
-                ].S3Output.S3Uri,
+                s3_data=step_process.properties.
+                ProcessingOutputConfig.Outputs["validation"].
+                S3Output.S3Uri,
                 content_type="application/x-parquet"
             )
-        },
-    )
-
-    step_train = TrainingStep(
-        name="DRLModelTrain",
-        step_args=train_args
+        }
     )
 
     step_register = RegisterModel(
