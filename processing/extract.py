@@ -3,7 +3,7 @@ from sagemaker.session import Session
 from sagemaker.feature_store.feature_group import FeatureGroup
 
 
-def extract_stock_data():
+def extract_stock_data(limit: int=None):
     region = boto3.Session().region_name
 
     boto_session = boto3.Session(region_name=region)
@@ -44,9 +44,14 @@ def extract_stock_data():
     )
     stock_query = stock_feature_group.athena_query()
 
-    query_string = (
-        f'SELECT * FROM "{stock_table}"'
-    )
+    if limit:
+        query_string = (
+            f'SELECT * FROM "{stock_table}" LIMIT {limit}'
+        )
+    else:
+        query_string = (
+            f'SELECT * FROM "{stock_table}"'
+        )
     stock_query.run(
         query_string=query_string,
         output_location=f"s3://{bucket_name}/query_results/",
