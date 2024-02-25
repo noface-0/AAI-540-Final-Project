@@ -8,8 +8,6 @@ from sklearn.impute import SimpleImputer
 from transform import AlpacaProcessor
 
 
-
-
 if __name__ == "__main__":
     base_dir = "/opt/ml/processing"
 

@@ -2,8 +2,8 @@
 # Define variables
 branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 tag=dev
-aws_account_id=...
-region=...
+aws_account_id=$AWS_ACCOUNT_ID
+region=us-east-1
 repository_name="rl-trading-v1"
 # Set the tag based on the branch
 if [ "$branch" = "main" ]; then

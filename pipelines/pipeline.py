@@ -95,7 +95,7 @@ def integrate_preprocessing(s3_parquet_path, role, pipeline_session):
                 source="/opt/ml/processing/test"
             ),
         ],
-        code="processing/preprocess.py",
+        code="pipelines/preprocess.py",
     )
 
     step_process = ProcessingStep(
