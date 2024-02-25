@@ -1,4 +1,5 @@
 import argparse
+import pandas as pd
 
 from environments.base import StockTradingEnv
 from training.train_test import train, test
@@ -22,7 +23,7 @@ API_BASE_URL = get_var("API_BASE_URL")
 
 
 
-def train_model(data=None):
+def train_model(train_data=None, validation_data=None):
     # Initialize environment
     env = StockTradingEnv
 
@@ -32,10 +33,12 @@ def train_model(data=None):
     }
     params = agent_configs.get(AGENT)
 
+    split = not (train_data and validation_data)
+
     # Training phase
     print("Starting training phase...")
     train(
-        data=data,
+        data=train_data,
         start_date=TRAIN_START_DATE,
         end_date=TRAIN_END_DATE,
         ticker_list=DOW_30_TICKER,
@@ -47,13 +50,14 @@ def train_model(data=None):
         if_vix=True,
         erl_params=params,
         cwd='models/runs/papertrading_erl',
-        break_step=1e6
+        break_step=1e6,
+        split=split
     )
     
     # Testing phase
     print("Starting testing phase...")
     account_value_erl = test(
-        data=data,
+        data=validation_data,
         start_date=TEST_START_DATE,
         end_date=TEST_END_DATE,
         ticker_list=DOW_30_TICKER,
@@ -71,29 +75,32 @@ def train_model(data=None):
         account_value_erl
     )
 
-    print("Starting full data training phase...")
-    train(
-        data=data,
-        start_date=TRAIN_START_DATE,
-        end_date=TEST_END_DATE,
-        ticker_list=DOW_30_TICKER,
-        time_interval=TIME_INTERVAL, 
-        technical_indicator_list=INDICATORS,
-        drl_lib='elegantrl',
-        env=env,
-        model_name=AGENT,
-        if_vix=True,
-        erl_params=params,
-        cwd='models/runs/papertrading_erl_retrain',
-        break_step=1e6,
-        split=False
-    )
+    # print("Starting full data training phase...")
+    # train(
+    #     data=train_data,
+    #     start_date=TRAIN_START_DATE,
+    #     end_date=TEST_END_DATE,
+    #     ticker_list=DOW_30_TICKER,
+    #     time_interval=TIME_INTERVAL, 
+    #     technical_indicator_list=INDICATORS,
+    #     drl_lib='elegantrl',
+    #     env=env,
+    #     model_name=AGENT,
+    #     if_vix=True,
+    #     erl_params=params,
+    #     cwd='models/runs/papertrading_erl_retrain',
+    #     break_step=1e6,
+    #     split=False
+    # )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument("--input-data", type=str, required=True,
-                        help="The input data.")
+    parser.add_argument("--train-data", type=str, required=True, help="The training data.")
+    parser.add_argument("--validation-data", type=str, required=True, help="The validation data.")
     args = parser.parse_args()
 
-    train_model(args.input_data)
+    train_data_df = pd.read_parquet(args.train_data)
+    validation_data_df = pd.read_parquet(args.validation_data)
+
+    train_model(train_data=train_data_df, validation_data=validation_data_df)
