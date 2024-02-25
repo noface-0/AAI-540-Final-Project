@@ -1,4 +1,5 @@
 import boto3
+import sagemaker
 from sagemaker.session import Session
 from sagemaker.feature_store.feature_group import FeatureGroup
 
@@ -7,13 +8,14 @@ def extract_stock_data(limit: int=None):
     region = boto3.Session().region_name
 
     boto_session = boto3.Session(region_name=region)
+    sagemaker_session = sagemaker.session.Session()
 
     bucket_name = "stockdata90210"
+    default_bucket = sagemaker_session.default_bucket()
 
     sagemaker_client = boto_session.client(
         service_name="sagemaker", region_name=region
     )
-
     featurestore_runtime = boto_session.client(
         service_name="sagemaker-featurestore-runtime", 
         region_name=region
@@ -23,7 +25,6 @@ def extract_stock_data(limit: int=None):
         sagemaker_client=sagemaker_client,
         sagemaker_featurestore_runtime_client=featurestore_runtime,
     )
-
     response = sagemaker_client.list_feature_groups(
         SortBy='CreationTime', SortOrder='Descending'
     )
@@ -58,5 +59,10 @@ def extract_stock_data(limit: int=None):
     )
     stock_query.wait()
     dataset = stock_query.as_dataframe()
+
+    parquet_path = (
+        f"s3://{default_bucket}/stock_data/extracted_stock_data.parquet"
+    )
+    dataset.to_parquet(parquet_path, engine='pyarrow', index=False)
 
     return dataset
