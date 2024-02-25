@@ -68,7 +68,8 @@ def train_model(train_data=None, validation_data=None):
         model_name=AGENT,
         if_vix=True,
         cwd='models/runs/papertrading_erl',
-        net_dimension=params['net_dimension']
+        net_dimension=params['net_dimension'],
+        split=split
     )
     print(
         "Testing phase completed. Final account value:", 
@@ -96,11 +97,11 @@ def train_model(train_data=None, validation_data=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument("--train-data", type=str, required=True, help="The training data.")
-    parser.add_argument("--validation-data", type=str, required=True, help="The validation data.")
+    parser.add_argument("--train", type=str, required=True, help="The training data.")
+    parser.add_argument("--validation", type=str, required=True, help="The validation data.")
     args = parser.parse_args()
 
-    train_data_df = pd.read_parquet(args.train_data)
-    validation_data_df = pd.read_parquet(args.validation_data)
+    train_data_df = pd.read_parquet(args.train)
+    validation_data_df = pd.read_parquet(args.validation)
 
     train_model(train_data=train_data_df, validation_data=validation_data_df)
