@@ -3,14 +3,18 @@ import boto3
 import awswrangler as wr
 import sagemaker
 from sagemaker.workflow.pipeline_context import PipelineSession
+from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.parameters import (
     ParameterInteger,
     ParameterString,
     ParameterFloat,
 )
 from sagemaker.sklearn.processing import SKLearnProcessor
+from sagemaker.inputs import TrainingInput
 from sagemaker.processing import ProcessingInput, ProcessingOutput
-from sagemaker.workflow.steps import ProcessingStep
+from sagemaker.estimator import Estimator
+from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+from sagemaker.workflow.step_collections import RegisterModel
 
 from processing.extract import extract_stock_data
 
@@ -39,6 +43,10 @@ batch_data = ParameterString(
     name="BatchData",
     default_value=s3_parquet_path,
 )
+
+model_path = f"s3://{default_bucket}/DLRModelTrain"
+model_package_name = "DRLModel"
+pipeline_name = "DRLPipeline"
 
 
 def s3_upload():
@@ -98,10 +106,75 @@ def integrate_preprocessing(s3_parquet_path, role, pipeline_session):
     return step_process
 
 
+def integrate_training(step_process):
+    rl_train = Estimator(
+        image_uri=...,
+        instance_type="ml.m5.xlarge",
+        instance_count=1,
+        output_path=model_path,
+        sagemaker_session=pipeline_session,
+        role=role,
+    )
+
+    train_args = rl_train.fit(
+        inputs={
+            "train": TrainingInput(
+                s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
+                    "train"
+                ].S3Output.S3Uri,
+                content_type="application/x-parquet"
+            ),
+            "validation": TrainingInput(
+                s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
+                    "validation"
+                ].S3Output.S3Uri,
+                content_type="application/x-parquet"
+            )
+        },
+    )
+
+    step_train = TrainingStep(
+        name="DRLModelTrain",
+        step_args=train_args
+    )
+
+    return rl_train, step_train
+
+
+def integrate_register(rl_train, step_train):
+    step_register = RegisterModel(
+        name="DRLRegisterModel",
+        estimator=rl_train,
+        model_data=step_train.properties.ModelArtifacts.S3ModelArtifacts,
+        content_types=["application/x-parquet"],
+        response_types=["application/x-parquet"],
+        inference_instances=["ml.t2.medium", "ml.m5.xlarge"],
+        transform_instances=["ml.m5.xlarge"],
+        model_package_group_name=model_package_name,
+        approval_status=model_approval_status,
+    )
+    return step_register
+
+
 if __name__ == "__main__":
     # Extract and upload stock data to S3
     upload_result = s3_upload()
 
-    preprocessing_step = integrate_preprocessing(
+    step_process = integrate_preprocessing(
         s3_parquet_path, role, pipeline_session
     )
+    rl_train, step_train = integrate_training(step_process)
+
+    step_register = integrate_register(rl_train, step_train)
+
+    pipeline = Pipeline(
+        name=pipeline_name,
+        parameters=[
+            processing_instance_count,
+            model_approval_status,
+            batch_data,
+        ],
+        steps=[step_process, step_train],
+    )
+    pipeline.upsert(role_arn=role)
+    execution = pipeline.start()
