@@ -153,7 +153,7 @@ def get_pipeline(
                 source="/opt/ml/processing/test"
             ),
         ],
-        code=os.path.join(BASE_DIR, "pipelines/preprocess.py"),
+        code=os.path.join(BASE_DIR, "preprocess.py"),
         job_arguments=["--input-data", input_data],
     )
 
