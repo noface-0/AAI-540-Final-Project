@@ -50,8 +50,8 @@ s3_parquet_path = (
 local_path = "/opt/ml/processing/input/stock_dataset.parquet"
 
 
-def s3_upload():
-    dataset = extract_stock_data()
+def s3_upload(limit: int=None):
+    dataset = extract_stock_data(limit=limit, upload=False)
 
     wr.s3.to_parquet(
         df=dataset,

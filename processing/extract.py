@@ -4,7 +4,7 @@ from sagemaker.session import Session
 from sagemaker.feature_store.feature_group import FeatureGroup
 
 
-def extract_stock_data(limit: int=None):
+def extract_stock_data(limit: int=None, upload: bool=True):
     region = boto3.Session().region_name
 
     boto_session = boto3.Session(region_name=region)
@@ -63,6 +63,7 @@ def extract_stock_data(limit: int=None):
     parquet_path = (
         f"s3://{default_bucket}/stock_data/extracted_stock_data.parquet"
     )
-    dataset.to_parquet(parquet_path, engine='pyarrow', index=False)
+    if upload:
+        dataset.to_parquet(parquet_path, engine='pyarrow', index=False)
 
     return dataset
