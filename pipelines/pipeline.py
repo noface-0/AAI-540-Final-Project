@@ -159,7 +159,8 @@ def get_pipeline(
 
     model_path = f"s3://{default_bucket}/{base_job_prefix}/DLRModelTrain"
     rl_train = Estimator(
-        image_uri='',
+        image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
+                   'rl-trading-v1-train'),
         instance_type="ml.m5.xlarge",
         instance_count=1,
         output_path=model_path,

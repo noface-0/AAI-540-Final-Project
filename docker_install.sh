@@ -1,3 +1,6 @@
+# install docker on local machine if necessary
+# export docker username as environment variable
+
 #!/bin/bash
 sudo apt-get update
 

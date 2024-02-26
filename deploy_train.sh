@@ -2,7 +2,7 @@
 # Define variables
 branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 tag=dev
-aws_account_id=$AWS_ACCOUNT_ID
+aws_account_id=$(aws sts get-caller-identity --query "Account" --output text)
 region=us-east-1
 repository_name="rl-trading-v1-train"
 # Set the tag based on the branch
