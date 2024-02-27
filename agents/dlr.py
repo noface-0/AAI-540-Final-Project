@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import json
 import torch
 # from elegantrl.agents import AgentA2C
 from agents.ppo import AgentPPO
@@ -143,4 +143,10 @@ class DRLAgent:
         print("Test Finished!")
         # return episode total_assets on testing data
         print("episode_return", episode_return)
+        eval_dict = {
+            "final_episode_return": episode_return,
+        }
+        with open('models/runs/eval/episode_return.json', 'w') as f:
+            json.dump(eval_dict, f)
+
         return episode_total_assets

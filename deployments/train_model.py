@@ -1,3 +1,4 @@
+import os
 import io
 import argparse
 import pandas as pd
@@ -108,12 +109,16 @@ def train_model(train_data=None, validation_data=None):
 
 
 if __name__ == "__main__":
+    import os
+    print(os.environ)
     parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument("--train", type=str, required=True, help="The training data.")
-    parser.add_argument("--validation", type=str, required=True, help="The validation data.")
-    args = parser.parse_args()
+    parser.add_argument('--training', type=str, default=os.environ.get('SM_CHANNEL_TRAINING'))
+    parser.add_argument('--validation', type=str, default=os.environ.get('SM_CHANNEL_VALIDATION'))
+    args, _ = parser.parse_known_args()
 
-    train_input = args.train
+    logging.info(args)
+
+    train_input = args.training
     val_input = args.validation
 
     train_data = load_data_from_s3(train_input)

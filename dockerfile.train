@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install -y \
     libsdl2-ttf-dev \
     swig
 
-WORKDIR /code
+WORKDIR /opt/app/src
 
 # Download and install TA-Lib
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
@@ -28,10 +28,17 @@ RUN apt-get clean \
 # Update setuptools and pip before installing requirements
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
-# Copy only the requirements file, to cache the pip install step
-COPY ./requirements.txt .
+
+COPY . /opt/app/src/
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /code
+COPY . /opt/app/src/
 
+ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONDONTWRITEBYTECODE=TRUE
+ENV PATH="/opt/app/src:${PATH}"
+ENV PYTHONPATH "${PYTHONPATH}:/opt/app/src"
+
+# Expose the port 8080
 EXPOSE 8080
