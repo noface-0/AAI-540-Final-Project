@@ -129,15 +129,27 @@ def get_pipeline(
         outputs=[
             ProcessingOutput(
                 output_name="training",
-                source="/opt/ml/processing/training"
+                source="/opt/ml/processing/training",
+                destination=(
+                    f"s3://{default_bucket}/{pipeline_name}/"
+                    "PreprocessDLRData/output/training"
+                )
             ),
             ProcessingOutput(
                 output_name="validation",
-                source="/opt/ml/processing/validation"
+                source="/opt/ml/processing/validation",
+                destination=(
+                    f"s3://{default_bucket}/{pipeline_name}/"
+                    "PreprocessDLRData/output/validation"
+                )
             ),
             ProcessingOutput(
                 output_name="testing",
-                source="/opt/ml/processing/testing"
+                source="/opt/ml/processing/testing",
+                destination=(
+                    f"s3://{default_bucket}/{pipeline_name}/"
+                    "PreprocessDLRData/output/testing"
+                )
             ),
         ],
         code=os.path.join(BASE_DIR, "preprocess.py"),
@@ -146,15 +158,6 @@ def get_pipeline(
 
     model_path = f"s3://{default_bucket}/{base_job_prefix}/DLRModelTrain"
 
-    training_s3_uri = (
-        step_process.properties.ProcessingOutputConfig
-        .Outputs["training"].S3Output.S3Uri
-    )
-    validation_s3_uri = (
-        step_process.properties.ProcessingOutputConfig
-        .Outputs["validation"].S3Output.S3Uri
-    )
-
     rl_train = Estimator(
         image_uri='914326228175.dkr.ecr.us-east-1.amazonaws.com/rl-trading-v1:train',
         instance_type="ml.m5.xlarge",
@@ -162,11 +165,7 @@ def get_pipeline(
         output_path=model_path,
         sagemaker_session=sagemaker_session,
         role=role,
-        container_entry_point=["python", "deployments/train_model.py"],
-        environment={
-            'TRAINING_S3_URI': training_s3_uri,
-            'VALIDATION_S3_URI': validation_s3_uri
-        }
+        container_entry_point=["python", "deployments/train_model.py"]
     )
     step_train = TrainingStep(
         name="DRLModelTrain",
