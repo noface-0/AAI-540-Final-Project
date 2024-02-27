@@ -116,7 +116,9 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     logging.info(args)
-    logging.log(os.environ)
+    logging.info(os.environ)
+    logging.info(os.environ.get('S3_TRAINING'))
+    logging.info(os.environ.get('S3_VALIDATION'))
 
     train_input = args.training
     val_input = args.validation
