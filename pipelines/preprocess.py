@@ -6,7 +6,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 
-from transform import AlpacaProcessor
+from processing.transform import AlpacaProcessor
 
 
 def process_data(input_data):
