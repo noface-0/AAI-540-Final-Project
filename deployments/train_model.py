@@ -111,8 +111,8 @@ def train_model(train_data=None, validation_data=None):
 if __name__ == "__main__":
     import os
     parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument('--training', type=str, default=os.environ.get('S3_TRAINING'))
-    parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
+    parser.add_argument('--training', type=str, default=get_var('S3_TRAINING'))
+    parser.add_argument('--validation', type=str, default=get_var('S3_VALIDATION'))
     args, _ = parser.parse_known_args()
 
     logging.info(args)
