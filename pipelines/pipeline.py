@@ -158,29 +158,39 @@ def get_pipeline(
 
     model_path = f"s3://{default_bucket}/{base_job_prefix}/DLRModelTrain"
 
+    s3_training_path = (
+        step_process.properties.ProcessingOutputConfig
+        .Outputs["training"].S3Output.S3Uri
+    )
+    s3_validation_path = (
+        step_process.properties.ProcessingOutputConfig
+        .Outputs["validation"].S3Output.S3Uri
+    )
+
     rl_train = Estimator(
-        image_uri='914326228175.dkr.ecr.us-east-1.amazonaws.com/rl-trading-v1:train',
+        image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
+                   'rl-trading-v1:train'),
         instance_type="ml.m5.xlarge",
         instance_count=1,
         output_path=model_path,
         sagemaker_session=sagemaker_session,
         role=role,
-        container_entry_point=["python", "deployments/train_model.py"]
+        container_entry_point=["python", "deployments/train_model.py"],
+        environment={
+            "S3_TRAINING": s3_training_path,
+            "S3_VALIDATION": s3_validation_path
+        }
     )
     step_train = TrainingStep(
         name="DRLModelTrain",
         estimator=rl_train,
         inputs={
             "training": TrainingInput(
-                s3_data=step_process.properties.
-                ProcessingOutputConfig.Outputs["training"].
-                S3Output.S3Uri,
+                s3_data=s3_training_path,
                 content_type="application/x-parquet"
             ),
             "validation": TrainingInput(
-                s3_data=step_process.properties.
-                ProcessingOutputConfig.Outputs["validation"].
-                S3Output.S3Uri,
+                s3_data=s3_validation_path,
                 content_type="application/x-parquet"
             )
         }
