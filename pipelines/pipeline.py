@@ -28,6 +28,7 @@ from sagemaker.workflow.parameters import (
     ParameterString,
 )
 from sagemaker.workflow.pipeline import Pipeline
+from sagemaker.workflow.pipeline_context import PipelineSession
 from sagemaker.workflow.properties import PropertyFile
 from sagemaker.workflow.steps import (
     ProcessingStep,
@@ -40,7 +41,7 @@ from processing.extract import extract_stock_data
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-sagemaker_session = sagemaker.session.Session()
+sagemaker_session = PipelineSession()
 region = sagemaker_session.boto_region_name
 role = sagemaker.get_execution_role()
 default_bucket = sagemaker_session.default_bucket()
@@ -151,8 +152,7 @@ def get_pipeline(
         ],
         code='preprocess.py',
         arguments=["--input-data", input_data],
-        source_dir=BASE_DIR,
-        dependencies=['requirements.txt'],
+        source_dir=BASE_DIR
     )
     step_process = ProcessingStep(
         name="PreprocessDLRData",
