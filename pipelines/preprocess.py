@@ -6,12 +6,15 @@ import numpy as np
 import boto3
 import logging
 import pathlib
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 
+
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
 
 def process_data(df):
     numeric_transformer = Pipeline(
@@ -20,24 +23,39 @@ def process_data(df):
             ("scaler", StandardScaler())
         ]
     )
-    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
-
+    
+    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    
     preprocess = ColumnTransformer(
         transformers=[
             ("num", numeric_transformer, numerical_cols)
-        ]
+        ],
+        remainder='passthrough'
     )
-
+    
     df_transformed = preprocess.fit_transform(df)
+    
+    transformed_columns = preprocess.transformers_[0][2] \
+    + [col for col in df.columns if col not in numerical_cols]
+    
+    df_reconstructed = pd.DataFrame(df_transformed, columns=transformed_columns)
+    
+    df_shuffled = df_reconstructed.sample(frac=1, random_state=42)
+    train, temp = train_test_split(df_shuffled, test_size=0.3, random_state=42)
+    validation, test = train_test_split(temp, test_size=(0.5), random_state=42)
+    
+    opt_dir = pathlib.Path("/opt/ml/processing")
+    train_dir = opt_dir / 'train'
+    validation_dir = opt_dir / 'validation'
+    test_dir = opt_dir / 'test'
 
-    train, validation, test = np.split(
-        df_transformed.sample(frac=1), 
-        [int(0.7 * len(df)), int(0.85 * len(df))]
-    )
+    for directory in [train_dir, validation_dir, test_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
 
-    train.to_parquet(f"{BASE_DIR}/train/train.parquet", index=False)
-    validation.to_parquet(f"{BASE_DIR}/validation/validation.parquet", index=False)
-    test.to_parquet(f"{BASE_DIR}/test/test.parquet", index=False)
+    train.to_parquet(train_dir / "train.parquet", index=False)
+    validation.to_parquet(validation_dir / "validation.parquet", index=False)
+    test.to_parquet(test_dir / "test.parquet", index=False)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input data for training.")
