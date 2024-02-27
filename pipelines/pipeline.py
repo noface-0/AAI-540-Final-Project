@@ -16,7 +16,8 @@ from sagemaker.processing import (
     ProcessingOutput,
     ScriptProcessor,
 )
-from sagemaker.sklearn.processing import SKLearnProcessor
+from sagemaker.sklearn import SKLearn
+from sagemaker.processing import FrameworkProcessor
 from sagemaker.workflow.conditions import ConditionLessThanOrEqualTo
 from sagemaker.workflow.condition_step import (
     ConditionStep,
@@ -126,35 +127,36 @@ def get_pipeline(
         name="InputDataUrl",
         default_value=s3_parquet_path,
     )
-    
-    sklearn_processor = SKLearnProcessor(
+
+    sklearn_processor = FrameworkProcessor(
+        estimator_cls=SKLearn,
         framework_version="0.23-1",
         instance_type=processing_instance_type,
         instance_count=processing_instance_count,
         base_job_name=f"{base_job_prefix}/sklearn-preprocess",
         sagemaker_session=sagemaker_session,
-        role=role
+        role=role,
     )
-    
-    step_process = ProcessingStep(
-        name="PreprocessDLRData",
-        processor=sklearn_processor,
+    step_args = sklearn_processor.run(
         outputs=[
             ProcessingOutput(
-                output_name="train", 
-                source="/opt/ml/processing/train"
+                output_name="train", source="/opt/ml/processing/train"
             ),
             ProcessingOutput(
-                output_name="validation", 
-                source="/opt/ml/processing/validation"
+                output_name="validation", source="/opt/ml/processing/validation"
             ),
             ProcessingOutput(
-                output_name="test", 
-                source="/opt/ml/processing/test"
+                output_name="test", source="/opt/ml/processing/test"
             ),
         ],
-        code=os.path.join(BASE_DIR, "preprocess.py"),
-        job_arguments=["--input-data", input_data],
+        code='preprocess.py',
+        arguments=["--input-data", input_data],
+        source_dir=os.path.join(BASE_DIR, "pipelines"),
+        dependencies=['requirements.txt'],
+    )
+    step_process = ProcessingStep(
+        name="PreprocessDLRData",
+        step_args=step_args
     )
 
     model_path = f"s3://{default_bucket}/{base_job_prefix}/DLRModelTrain"

@@ -1,16 +1,16 @@
+import os
+import copy
 import argparse
 import pandas as pd
 import numpy as np
-import copy
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def process_data(input_data):
-    base_dir = "/opt/ml/processing"
-
     df = copy(input_data)
 
     numeric_transformer = Pipeline(
@@ -34,9 +34,9 @@ def process_data(input_data):
         [int(0.7 * len(df)), int(0.85 * len(df))]
     )
 
-    train.to_parquet(f"{base_dir}/train/train.parquet", index=False)
-    validation.to_parquet(f"{base_dir}/validation/validation.parquet", index=False)
-    test.to_parquet(f"{base_dir}/test/test.parquet", index=False)
+    train.to_parquet(f"{BASE_DIR}/train/train.parquet", index=False)
+    validation.to_parquet(f"{BASE_DIR}/validation/validation.parquet", index=False)
+    test.to_parquet(f"{BASE_DIR}/test/test.parquet", index=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input data for training.")
