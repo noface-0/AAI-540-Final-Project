@@ -45,16 +45,16 @@ def process_data(df):
     validation, test = train_test_split(temp, test_size=(0.5), random_state=42)
     
     opt_dir = pathlib.Path("/opt/ml/processing")
-    train_dir = opt_dir / 'train'
+    train_dir = opt_dir / 'training'
     validation_dir = opt_dir / 'validation'
-    test_dir = opt_dir / 'test'
+    test_dir = opt_dir / 'testing'
 
     for directory in [train_dir, validation_dir, test_dir]:
         directory.mkdir(parents=True, exist_ok=True)
 
-    train.to_parquet(train_dir / "train.parquet", index=False)
+    train.to_parquet(train_dir / "training.parquet", index=False)
     validation.to_parquet(validation_dir / "validation.parquet", index=False)
-    test.to_parquet(test_dir / "test.parquet", index=False)
+    test.to_parquet(test_dir / "testing.parquet", index=False)
 
 
 if __name__ == "__main__":
