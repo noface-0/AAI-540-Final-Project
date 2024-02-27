@@ -1,21 +1,17 @@
 import argparse
 import pandas as pd
 import numpy as np
+import copy
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 
-from processing.transform import AlpacaProcessor
-
 
 def process_data(input_data):
     base_dir = "/opt/ml/processing"
 
-    dp = AlpacaProcessor()
-
-    df = dp.clean_data(input_data)
-    df = dp.add_technical_indicators(df)
+    df = copy(input_data)
 
     numeric_transformer = Pipeline(
         steps=[
@@ -48,4 +44,6 @@ if __name__ == "__main__":
                         help="The input data.")
     args = parser.parse_args()
 
-    process_data(args.input_data)
+    input_df = pd.read_parquet(args.input_data)
+
+    process_data(input_df)
