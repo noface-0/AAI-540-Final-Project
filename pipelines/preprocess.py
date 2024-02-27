@@ -13,9 +13,7 @@ from sklearn.impute import SimpleImputer
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-def process_data(input_data):
-    df = copy(input_data)
-
+def process_data(df):
     numeric_transformer = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
