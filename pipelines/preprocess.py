@@ -3,6 +3,9 @@ import copy
 import argparse
 import pandas as pd
 import numpy as np
+import boto3
+import logging
+import pathlib
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -44,6 +47,17 @@ if __name__ == "__main__":
                         help="The input data.")
     args = parser.parse_args()
 
-    input_df = pd.read_parquet(args.input_data)
+    base_dir = "/opt/ml/processing"
+    pathlib.Path(f"{base_dir}/data").mkdir(parents=True, exist_ok=True)
+    input_data = args.input_data
+    bucket = input_data.split("/")[2]
+    key = "/".join(input_data.split("/")[3:])
+
+    logging.info("Downloading data from bucket: %s, key: %s", bucket, key)
+    fn = f"{base_dir}/data/extracted_stocks.parquet"
+    s3 = boto3.resource("s3")
+    s3.Bucket(bucket).download_file(key, fn)
+
+    input_df = pd.read_parquet(fn)
 
     process_data(input_df)
