@@ -21,7 +21,6 @@ from sagemaker.workflow.condition_step import (
     ConditionStep,
     JsonGet,
 )
-from sagemaker.workflow.functions import JsonGetStep
 from sagemaker.workflow.parameters import (
     ParameterInteger,
     ParameterString,
@@ -251,8 +250,8 @@ def get_pipeline(
         model_metrics=model_metrics
     )
     cond_lte = ConditionGreaterThanOrEqualTo(
-        left=JsonGetStep(
-            step_name=step_eval.name,
+        left=JsonGet(
+            step=step_eval,
             property_file=evaluation_report,
             json_path="final_episode_return.value",
         ),
