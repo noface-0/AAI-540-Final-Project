@@ -214,9 +214,9 @@ def get_pipeline(
         inputs=[
             ProcessingInput(
                 source=step_process.properties.ProcessingOutputConfig.Outputs[
-                    "test"
+                    "testing"
                 ].S3Output.S3Uri,
-                destination="/opt/ml/processing/test",
+                destination="/opt/ml/processing/testing",
             ),
         ],
         outputs=[
