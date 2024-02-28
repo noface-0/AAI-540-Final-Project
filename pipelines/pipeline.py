@@ -16,7 +16,7 @@ from sagemaker.processing import (
     ScriptProcessor,
 )
 from sagemaker.sklearn.processing import SKLearnProcessor
-from sagemaker.workflow.conditions import ConditionLessThanOrEqualTo
+from sagemaker.workflow.conditions import ConditionGreaterThanOrEqualTo
 from sagemaker.workflow.condition_step import (
     ConditionStep,
     JsonGet,
@@ -196,6 +196,48 @@ def get_pipeline(
         }
     )
 
+    sklearn_eval = SKLearnProcessor(
+        framework_version="0.23-1",
+        instance_type="ml.m5.xlarge",
+        instance_count=1,
+        base_job_name=f"{base_job_prefix}/dlr-eval",
+        sagemaker_session=sagemaker_session,
+        role=role,
+    )
+    evaluation_report = PropertyFile(
+        name="EvaluationReport",
+        output_name="evaluation",
+        path="evaluation.json",
+    )
+    step_eval = ProcessingStep(
+        name="DLREvaluation",
+        processor=sklearn_eval,
+        inputs=[
+            ProcessingInput(
+                source=step_process.properties.ProcessingOutputConfig.Outputs[
+                    "test"
+                ].S3Output.S3Uri,
+                destination="/opt/ml/processing/test",
+            ),
+        ],
+        outputs=[
+            ProcessingOutput(
+        output_name="evaluation", source="/opt/ml/processing/evaluation"
+            ),
+        ],
+        code=os.path.join(BASE_DIR, "evaluate.py"),
+        property_files=[evaluation_report],
+    )
+
+    model_metrics = ModelMetrics(
+        model_statistics=MetricsSource(
+            s3_uri="{}/evaluation.json".format(
+                step_eval.arguments["ProcessingOutputConfig"] \
+                    ["Outputs"][0]["S3Output"]["S3Uri"]
+            ),
+            content_type="application/json",
+        )
+    )
     step_register = RegisterModel(
         name="RegisterDLRModel",
         estimator=rl_train,
@@ -206,6 +248,20 @@ def get_pipeline(
         transform_instances=["ml.m5.large"],
         model_package_group_name=model_package_group_name,
         approval_status=model_approval_status,
+    )
+    cond_lte = ConditionGreaterThanOrEqualTo(
+        left=JsonGet(
+            step_name=step_eval.name,
+            property_file=evaluation_report,
+            json_path="final_episode_return.value",
+        ),
+        right=1,
+    )
+    step_cond = ConditionStep(
+        name="DLREpisodeReturnCond",
+        conditions=[cond_lte],
+        if_steps=[step_register],
+        else_steps=[],
     )
 
     # pipeline instance
@@ -218,7 +274,8 @@ def get_pipeline(
             model_approval_status,
             input_data,
         ],
-        steps=[step_process, step_train],
+        steps=[step_process, step_train, step_eval, step_cond],
         sagemaker_session=sagemaker_session,
     )
+
     return pipeline

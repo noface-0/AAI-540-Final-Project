@@ -111,17 +111,17 @@ def train_model(train_data=None, validation_data=None):
 if __name__ == "__main__":
     import os
     parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument('--training', type=str, default=get_var('S3_TRAINING'))
-    parser.add_argument('--validation', type=str, default=get_var('S3_VALIDATION'))
-    args, _ = parser.parse_known_args()
+    parser.add_argument('--training', type=str, default=os.environ.get('S3_TRAINING'))
+    parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
+    args = parser.parse_args()
 
-    logging.info(args)
-    logging.info(os.environ)
-    logging.info(os.environ.get('S3_TRAINING'))
-    logging.info(os.environ.get('S3_VALIDATION'))
-
-    train_input = args.training
-    val_input = args.validation
+    logging.log(args)
+    logging.log(os.environ)
+    logging.log(os.environ.get('S3_TRAINING'))
+    logging.log(os.environ.get('S3_VALIDATION'))
+    # this should dynamically be set but something is wrong with env variables
+    train_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/training"
+    val_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/validation"
 
     train_data = load_data_from_s3(train_input)
     val_data = load_data_from_s3(val_input)
@@ -138,4 +138,3 @@ if __name__ == "__main__":
     model = load_model_from_local_path(local_path)
 
     save_model_to_s3(model, bucket_name, save_s3_path)
-

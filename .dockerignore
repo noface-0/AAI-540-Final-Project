@@ -1,5 +1,6 @@
 .gcloudignore
 .gitignore
+.conda
 
 **/*.log
 temp/

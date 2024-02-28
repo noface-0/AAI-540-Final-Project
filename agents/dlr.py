@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import json
 import torch
 # from elegantrl.agents import AgentA2C
@@ -11,6 +12,9 @@ from utils.training_utils import train_agent
 MODELS = {"ppo": AgentPPO, "sac": AgentSAC}
 OFF_POLICY_MODELS = ["ddpg", "td3", "sac"]
 ON_POLICY_MODELS = ["ppo"]
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
 # MODEL_KWARGS = {x: config.__dict__[f"{x.upper()}_PARAMS"] for x in MODELS.keys()}
 #
 # NOISE = {
@@ -140,13 +144,17 @@ class DRLAgent:
                 episode_returns.append(episode_return)
                 if done:
                     break
-        print("Test Finished!")
+        print("Test Finished")
         # return episode total_assets on testing data
         print("episode_return", episode_return)
+
+        eval_file_path = os.path.join(
+            BASE_DIR, 'models', 'runs', 'eval', 'evaluation.json'
+        )
         eval_dict = {
             "final_episode_return": episode_return,
         }
-        with open('models/runs/eval/episode_return.json', 'w') as f:
+        with open(eval_file_path, 'w') as f:
             json.dump(eval_dict, f)
 
         return episode_total_assets

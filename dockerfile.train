@@ -9,36 +9,28 @@ RUN apt-get update -y && apt-get install -y \
     libsdl2-image-dev \
     libsdl2-mixer-dev \
     libsdl2-ttf-dev \
-    swig
-
-WORKDIR /opt/app/src
-
-# Download and install TA-Lib
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
+    swig \
+    && wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
     && tar -xzf ta-lib-0.4.0-src.tar.gz \
     && cd ta-lib/ \
     && ./configure --prefix=/usr \
     && make \
-    && make install
-
-# Cleanup to reduce image size
-RUN apt-get clean \
+    && make install \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /ta-lib-0.4.0-src.tar.gz /ta-lib
 
-# Update setuptools and pip before installing requirements
+WORKDIR /opt/app/src
+
 RUN pip install --no-cache-dir --upgrade pip setuptools
 
-
-COPY . /opt/app/src/
-
+COPY requirements.txt /opt/app/src/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /opt/app/src/
 
-ENV PYTHONUNBUFFERED=TRUE
-ENV PYTHONDONTWRITEBYTECODE=TRUE
-ENV PATH="/opt/app/src:${PATH}"
-ENV PYTHONPATH "${PYTHONPATH}:/opt/app/src"
+ENV PYTHONUNBUFFERED=TRUE \
+    PYTHONDONTWRITEBYTECODE=TRUE \
+    PATH="/opt/app/src:${PATH}" \
+    PYTHONPATH="${PYTHONPATH}:/opt/app/src"
 
-# Expose the port 8080
 EXPOSE 8080
