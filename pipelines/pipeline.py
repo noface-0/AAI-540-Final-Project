@@ -226,6 +226,7 @@ def get_pipeline(
         ],
         code=os.path.join(BASE_DIR, "evaluate.py"),
         property_files=[evaluation_report],
+        depends_on=[step_train]
     )
 
     model_metrics = ModelMetrics(
