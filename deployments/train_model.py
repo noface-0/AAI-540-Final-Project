@@ -23,16 +23,18 @@ from utils.utils import get_var
 from deployments.s3_utils import (
     load_data_from_s3,
     load_model_from_local_path,
-    save_model_to_s3
+    save_model_to_s3,
+    get_secret
 )
 
 
-API_KEY = get_var("API_KEY")
-API_SECRET = get_var("API_SECRET")
-API_BASE_URL = get_var("API_BASE_URL")
-
-
-def train_model(train_data=None, validation_data=None):
+def train_model(
+        train_data=None, 
+        validation_data=None,
+        api_key=None,
+        api_secret=None,
+        api_url=None,
+):
     # Initialize environment
     env = StockTradingEnv
 
@@ -42,7 +44,11 @@ def train_model(train_data=None, validation_data=None):
     }
     params = agent_configs.get(AGENT)
 
-    split = not (train_data and validation_data)
+    if train_data.empty or validation_data.empty:
+        logging.info("No training data provided. Auto-downloading.")
+        split = True
+    else:
+        split = False
 
     # Training phase
     print("Starting training phase...")
@@ -60,7 +66,10 @@ def train_model(train_data=None, validation_data=None):
         erl_params=params,
         cwd='models/runs/papertrading_erl',
         break_step=1e6,
-        split=split
+        split=split,
+        api_key=api_key,
+        api_secret=api_secret,
+        api_url=api_url
     )
     
     # Testing phase
@@ -78,7 +87,10 @@ def train_model(train_data=None, validation_data=None):
         if_vix=True,
         cwd='models/runs/papertrading_erl',
         net_dimension=params['net_dimension'],
-        split=split
+        split=split,
+        api_key=api_key,
+        api_secret=api_secret,
+        api_url=api_url
     )
     print(
         "Testing phase completed. Final account value:", 
@@ -104,7 +116,10 @@ def train_model(train_data=None, validation_data=None):
         erl_params=params,
         cwd='models/runs/papertrading_erl_retrain',
         break_step=1e6,
-        split=False
+        split=False,
+        api_key=api_key,
+        api_secret=api_secret,
+        api_url=api_url
     )
 
 
@@ -115,13 +130,13 @@ if __name__ == "__main__":
     parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
     args = parser.parse_args()
 
-    logging.log(args)
-    logging.log(os.environ)
-    logging.log(os.environ.get('S3_TRAINING'))
-    logging.log(os.environ.get('S3_VALIDATION'))
+    logging.log(logging.DEBUG, args)
+    logging.log(logging.DEBUG, os.environ)
+    logging.log(logging.DEBUG, os.environ.get('S3_TRAINING'))
+    logging.log(logging.DEBUG, os.environ.get('S3_VALIDATION'))
     # this should dynamically be set but something is wrong with env variables
-    train_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/training"
-    val_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/validation"
+    train_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/training/training.parquet"
+    val_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/validation/validation.parquet"
 
     train_data = load_data_from_s3(train_input)
     val_data = load_data_from_s3(val_input)
@@ -129,7 +144,17 @@ if __name__ == "__main__":
     train_data_df = pd.read_parquet(io.BytesIO(train_data))
     validation_data_df = pd.read_parquet(io.BytesIO(val_data))
 
-    train_model(train_data=train_data_df, validation_data=validation_data_df)
+    api_key = get_secret("ALPACA_API_KEY")
+    api_secret = get_secret("ALPACA_API_SECRET")
+    api_url = get_secret("ALPACA_API_BASE_URL")
+
+    train_model(
+        train_data=train_data_df, 
+        validation_data=validation_data_df,
+        api_key=api_key,
+        api_secret=api_secret,
+        api_url=api_url
+    )
 
     bucket_name = 'rl-trading-v1-runs'
     local_path = 'models/runs/papertrading_erl_retrain/actor.pth'

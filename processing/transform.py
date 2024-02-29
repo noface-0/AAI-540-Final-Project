@@ -10,9 +10,9 @@ from sklearn.preprocessing import StandardScaler
 from processing.indicators import process_indicators
 from utils.utils import get_var
 
-API_KEY = get_var("API_KEY")
-API_SECRET = get_var("API_SECRET")
-API_BASE_URL = get_var("API_BASE_URL")
+API_KEY = get_var("ALPACA_API_KEY")
+API_SECRET = get_var("ALPACA_API_SECRET")
+API_BASE_URL = get_var("ALPACA_API_BASE_URL")
 
 
 # reference: https://github.com/AI4Finance-Foundation/FinRL
@@ -102,7 +102,10 @@ class AlpacaProcessor:
 
         # Reset the index and rename the columns for consistency
         data_df = data_df.reset_index().rename(
-            columns={"index": "timestamp", "symbol": "tic"}
+            columns={
+                "index": "timestamp", 
+                "symbol": "tic",
+            }
         )
 
         # Sort the data by both timestamp and tic for consistent ordering
@@ -159,6 +162,14 @@ class AlpacaProcessor:
         return tmp_df
 
     def clean_data(self, df):
+        # this captures data that is stored in s3
+        df = df.rename(
+            columns={
+                "ticker": "tic"
+            }
+        )
+        df = df[['timestamp','open','high','low','close','volume','tic']]
+
         print("Data cleaning started")
         tic_list = np.unique(df.tic.values)
         n_tickers = len(tic_list)

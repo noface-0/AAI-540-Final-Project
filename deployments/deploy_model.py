@@ -13,9 +13,9 @@ app = FastAPI()
 action_dim = len(DOW_30_TICKER)
 state_dim = 1 + 2 + 3 * action_dim + len(INDICATORS) * action_dim
 
-API_KEY = get_var("API_KEY")
-API_SECRET = get_var("API_SECRET")
-API_BASE_URL = get_var("API_BASE_URL")
+API_KEY = get_var("ALPACA_API_KEY")
+API_SECRET = get_var("ALPACA_API_SECRET")
+API_BASE_URL = get_var("ALPACA_API_BASE_URL")
 
 
 def start_trading():

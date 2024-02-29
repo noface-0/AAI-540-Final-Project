@@ -24,7 +24,10 @@ def process_data(df):
         ]
     )
     
-    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    numerical_cols = [
+        col for col in df.select_dtypes(include=['float64', 'int64']) \
+            .columns if col != "timestamp"
+    ]
     
     preprocess = ColumnTransformer(
         transformers=[

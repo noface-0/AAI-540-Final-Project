@@ -17,14 +17,16 @@ def train(
     if_vix=True,
     data=None,
     split=True,
+    api_key=None,
+    api_secret=None,
+    api_url=None,
     **kwargs,
 ):
-    dp = AlpacaProcessor()
+    dp = AlpacaProcessor(api_key, api_secret, api_url)
 
-    if not data:
+    if data.empty:
         # download data
         data = dp.download_data(ticker_list, start_date, end_date, time_interval)
-        data = dp.clean_data(data)
     else:
         if split:
             train_size = int(len(data) * TRAIN_SPLIT)
@@ -32,6 +34,7 @@ def train(
             test_data = data[train_size:]
             data = train_data
 
+    data = dp.clean_data(data)
     data = dp.add_technical_indicators(data)
 
     if if_vix:
@@ -101,13 +104,15 @@ def test(
     if_vix=True,
     data=None,
     split=True,
+    api_key=None,
+    api_secret=None,
+    api_url=None,
     **kwargs,
 ):
-    dp = AlpacaProcessor()
+    dp = AlpacaProcessor(api_key, api_secret, api_url)
     # download data
-    if not data:
+    if data.empty:
         data = dp.download_data(ticker_list, start_date, end_date, time_interval)
-        data = dp.clean_data(data)
     else:
         if split:
             train_size = int(len(data) * TRAIN_SPLIT)
@@ -115,6 +120,7 @@ def test(
             test_data = data[train_size:]
             data = test_data
 
+    data = dp.clean_data(data)
     data = dp.add_technical_indicators(data)
 
     if if_vix:

@@ -70,3 +70,49 @@ def load_model_from_local_path(local_path):
     """
     model = torch.load(local_path)
     return model
+
+
+def create_secret(key_name: str, key_value: str):
+    client = boto3.client('secretsmanager')
+    response = client.create_secret(
+        Name=key_name,
+        Description='Alpaca base url',
+        SecretString=key_value
+    )
+
+
+def get_secret(
+        secret_name: str, 
+        region_name: str = "us-east-1"
+) -> str:
+    """
+    Retrieve a secret from AWS Secrets Manager.
+
+    Parameters:
+    - secret_name (str): The name of the secret.
+    - region_name (str): The AWS region where the secret is stored. 
+        Default is 'us-east-1'.
+
+    Returns:
+    - secret (str): The secret value.
+    """
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except Exception as e:
+        print(f"Error retrieving secret {secret_name}: {e}")
+        return None
+
+    if 'SecretString' in get_secret_value_response:
+        secret = get_secret_value_response['SecretString']
+    else:
+        secret = get_secret_value_response['SecretBinary']
+
+    return secret
