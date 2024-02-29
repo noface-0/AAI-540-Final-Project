@@ -17,6 +17,8 @@ from deployments.s3_utils import (
     get_secret
 )
 
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
 
 def test_model(
         test_data=pd.DataFrame(), 
@@ -60,8 +62,6 @@ def test_model(
 
 
 if __name__ == "__main__":
-    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-
     parser = argparse.ArgumentParser(description="Process input data for testing.")
     parser.add_argument('--testing', type=str, default=os.environ.get('S3_TESTING'))
     args = parser.parse_args()

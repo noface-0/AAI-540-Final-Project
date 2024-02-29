@@ -7,8 +7,6 @@ from deployments.s3_utils import (
     get_secret
 )
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-
 # evaluation already performed. Just extracting for Sagemaker step
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.realpath(__file__))
