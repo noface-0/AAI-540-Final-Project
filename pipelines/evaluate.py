@@ -1,4 +1,5 @@
 import json
+import shutil
 import os
 import argparse
 
@@ -22,8 +23,21 @@ if __name__ == "__main__":
     evaluation_data = load_data_from_s3(eval_s3_path)
     evaluation_data_json = json.loads(evaluation_data.decode('utf-8'))
 
-    evaluation_output_path = os.path.join("/opt/ml/processing/evaluation", "evaluation.json")
-    print("Saving return report to {}".format(evaluation_output_path))
+    evaluation_output_dir = "/opt/ml/processing/evaluation"
+    evaluation_output_file = "evaluation.json"
+    evaluation_output_path = os.path.join(evaluation_output_dir, evaluation_output_file)
 
+    os.makedirs(evaluation_output_dir, exist_ok=True)
+
+    if os.path.isdir(evaluation_output_path):
+        print(
+            f"Warning: {evaluation_output_path} is a directory. "
+            "Attempting to remove the directory."
+        )
+        shutil.rmtree(evaluation_output_path)
+        print(f"Directory removed. Proceeding to save the file.")
+    else:
+        print("Saving return report to {}".format(evaluation_output_path))
+        
     with open(evaluation_output_path, "w") as f:
         f.write(json.dumps(evaluation_data_json))

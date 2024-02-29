@@ -13,7 +13,7 @@ fi
 aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $aws_account_id.dkr.ecr.$region.amazonaws.com
 # Build the Docker image
 echo "Building Docker image..."
-docker build --no-cache --platform linux/amd64 -f dockerfile.train -t $aws_account_id.dkr.ecr.$region.amazonaws.com/$repository_name:$tag .
+docker build --platform linux/amd64 -f dockerfile.train -t $aws_account_id.dkr.ecr.$region.amazonaws.com/$repository_name:$tag .
 # Push the Docker image to AWS ECR
 echo "Pushing Docker image to AWS ECR..."
 docker push $aws_account_id.dkr.ecr.$region.amazonaws.com/$repository_name:$tag
