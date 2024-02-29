@@ -158,7 +158,7 @@ if __name__ == "__main__":
     local_path = f'{BASE_DIR}/models/runs/papertrading_erl_retrain/actor.pth'
     local_eval_path = f'{BASE_DIR}/models/runs/eval/evaluation.json'
     eval_s3_path = "runs/evaluation/evaluation.json"
-    model_s3_path = 'runs/actor.pth'
+    model_s3_path = 'runs/models/actor.pth'
 
     model = load_model_from_local_path(local_path)
 
