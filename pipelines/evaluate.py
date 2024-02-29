@@ -2,9 +2,9 @@ import json
 import os
 import argparse
 
-from deployments.test_model import test_model
 from deployments.s3_utils import (
-    get_secret
+    get_secret,
+    load_data_from_s3
 )
 
 # evaluation already performed. Just extracting for Sagemaker step
@@ -15,27 +15,15 @@ if __name__ == "__main__":
     parser.add_argument('--testing', type=str, default=os.environ.get('S3_TESTING'))
     args = parser.parse_args()
 
-    # test_input = os.environ.get('S3_TESTING')
-    # test_data = load_data_from_s3(test_input)
-    # test_data_df = pd.read_parquet(io.BytesIO(test_data))
+    # eval has already taken place in the training
+    bucket_name = 'rl-trading-v1-runs'
+    eval_s3_path = f"s3://{bucket_name}/runs/evaluation/evaluation.json"
 
-    api_key = get_secret("ALPACA_API_KEY")
-    api_secret = get_secret("ALPACA_API_SECRET")
-    api_url = get_secret("ALPACA_API_BASE_URL")
-
-    test_model(
-        # test_data=test_data_df, 
-        api_key=api_key,
-        api_secret=api_secret,
-        api_url=api_url
-    )
-    evaluation_json_path = f'{BASE_DIR}/models/runs/eval/evaluation.json'
-
-    with open(evaluation_json_path, 'r') as f:
-        evaluation_data = json.load(f)
+    evaluation_data = load_data_from_s3(eval_s3_path)
+    evaluation_data_json = json.loads(evaluation_data.decode('utf-8'))
 
     evaluation_output_path = os.path.join("/opt/ml/processing/evaluation", "evaluation.json")
     print("Saving return report to {}".format(evaluation_output_path))
 
     with open(evaluation_output_path, "w") as f:
-        f.write(json.dumps(evaluation_data))
+        f.write(json.dumps(evaluation_data_json))
