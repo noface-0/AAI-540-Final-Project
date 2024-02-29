@@ -23,13 +23,11 @@ if __name__ == "__main__":
     evaluation_data = load_data_from_s3(eval_s3_path)
     evaluation_data_json = json.loads(evaluation_data.decode('utf-8'))
 
-    evaluation_output_dir = "/opt/ml/processing/evaluation"
+    evaluation_output_dir = "/opt/ml/processing/models/runs/evaluation"
     evaluation_output_file = "evaluation.json"
     evaluation_output_path = os.path.join(evaluation_output_dir, evaluation_output_file)
 
-    os.makedirs(evaluation_output_dir, exist_ok=True)
-
-    if os.path.isdir(evaluation_output_path):
+    if os.path.isdir(evaluation_output_dir):
         print(
             f"Warning: {evaluation_output_path} is a directory. "
             "Attempting to remove the directory."
@@ -38,6 +36,8 @@ if __name__ == "__main__":
         print(f"Directory removed. Proceeding to save the file.")
     else:
         print("Saving return report to {}".format(evaluation_output_path))
-        
+
+    os.makedirs(evaluation_output_dir, exist_ok=True)
+
     with open(evaluation_output_path, "w") as f:
         f.write(json.dumps(evaluation_data_json))
