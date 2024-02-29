@@ -25,8 +25,8 @@ def process_data(df):
     )
     
     numerical_cols = [
-        col for col in df.select_dtypes(include=['float64', 'int64']) \
-            .columns if col != "timestamp"
+        col for col in df.select_dtypes(include=['float64', 'int64']).columns 
+        if col != "timestamp"
     ]
     
     preprocess = ColumnTransformer(
@@ -38,8 +38,9 @@ def process_data(df):
     
     df_transformed = preprocess.fit_transform(df)
     
-    transformed_columns = preprocess.transformers_[0][2] \
-    + [col for col in df.columns if col not in numerical_cols]
+    transformed_columns = preprocess.transformers_[0][2] + \
+        [col for col in df.columns if col 
+         not in numerical_cols or col == "timestamp"]
     
     df_reconstructed = pd.DataFrame(df_transformed, columns=transformed_columns)
     

@@ -24,13 +24,14 @@ from deployments.s3_utils import (
     load_data_from_s3,
     load_model_from_local_path,
     save_model_to_s3,
+    save_file_to_s3,
     get_secret
 )
 
 
 def train_model(
-        train_data=None, 
-        validation_data=None,
+        train_data=pd.DataFrame(), 
+        validation_data=pd.DataFrame(),
         api_key=None,
         api_secret=None,
         api_url=None,
@@ -64,7 +65,7 @@ def train_model(
         model_name=AGENT,
         if_vix=True,
         erl_params=params,
-        cwd='models/runs/papertrading_erl',
+        cwd=f'{BASE_DIR}/models/runs/papertrading_erl',
         break_step=1e6,
         split=split,
         api_key=api_key,
@@ -73,7 +74,7 @@ def train_model(
     )
     
     # Testing phase
-    print("Starting testing phase...")
+    print("Starting validation phase...")
     account_value_erl = test(
         data=validation_data,
         start_date=TEST_START_DATE,
@@ -85,7 +86,7 @@ def train_model(
         env=env,
         model_name=AGENT,
         if_vix=True,
-        cwd='models/runs/papertrading_erl',
+        cwd=f'{BASE_DIR}/models/runs/papertrading_erl',
         net_dimension=params['net_dimension'],
         split=split,
         api_key=api_key,
@@ -93,13 +94,13 @@ def train_model(
         api_url=api_url
     )
     print(
-        "Testing phase completed. Final account value:", 
+        "Validation phase completed. Final account value:", 
         account_value_erl
     )
 
     full_data_df = pd.concat(
         [train_data, validation_data], ignore_index=True
-    ) if train_data is not None else None
+    ) if not train_data.empty else pd.DataFrame()
 
     print("Starting full data training phase...")
     train(
@@ -114,7 +115,7 @@ def train_model(
         model_name=AGENT,
         if_vix=True,
         erl_params=params,
-        cwd='models/runs/papertrading_erl_retrain',
+        cwd=f'{BASE_DIR}/models/runs/papertrading_erl_retrain',
         break_step=1e6,
         split=False,
         api_key=api_key,
@@ -125,41 +126,41 @@ def train_model(
 
 if __name__ == "__main__":
     import os
+    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
     parser = argparse.ArgumentParser(description="Process input data for training.")
     parser.add_argument('--training', type=str, default=os.environ.get('S3_TRAINING'))
     parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
     args = parser.parse_args()
 
-    logging.log(logging.DEBUG, args)
-    logging.log(logging.DEBUG, os.environ)
-    logging.log(logging.DEBUG, os.environ.get('S3_TRAINING'))
-    logging.log(logging.DEBUG, os.environ.get('S3_VALIDATION'))
-    # this should dynamically be set but something is wrong with env variables
-    train_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/training/training.parquet"
-    val_input = "s3://sagemaker-us-east-1-914326228175/DLRPipeline/PreprocessDLRData/output/validation/validation.parquet"
+    # train_input = os.environ.get('S3_TRAINING')
+    # val_input = os.environ.get('S3_VALIDATION')
 
-    train_data = load_data_from_s3(train_input)
-    val_data = load_data_from_s3(val_input)
+    # train_data = load_data_from_s3(train_input)
+    # val_data = load_data_from_s3(val_input)
 
-    train_data_df = pd.read_parquet(io.BytesIO(train_data))
-    validation_data_df = pd.read_parquet(io.BytesIO(val_data))
+    # train_data_df = pd.read_parquet(io.BytesIO(train_data))
+    # validation_data_df = pd.read_parquet(io.BytesIO(val_data))
 
     api_key = get_secret("ALPACA_API_KEY")
     api_secret = get_secret("ALPACA_API_SECRET")
     api_url = get_secret("ALPACA_API_BASE_URL")
 
     train_model(
-        train_data=train_data_df, 
-        validation_data=validation_data_df,
+        # train_data=train_data_df, 
+        # validation_data=validation_data_df,
         api_key=api_key,
         api_secret=api_secret,
         api_url=api_url
     )
 
     bucket_name = 'rl-trading-v1-runs'
-    local_path = 'models/runs/papertrading_erl_retrain/actor.pth'
-    save_s3_path = 'runs/actor.pth'
+    local_path = f'{BASE_DIR}/models/runs/papertrading_erl_retrain/actor.pth'
+    local_eval_path = f'{BASE_DIR}/models/runs/eval/evaluation.json'
+    eval_s3_path = "runs/evaluation/evaluation.json"
+    model_s3_path = 'runs/actor.pth'
 
     model = load_model_from_local_path(local_path)
 
-    save_model_to_s3(model, bucket_name, save_s3_path)
+    save_file_to_s3(local_eval_path, bucket_name, eval_s3_path)
+    save_model_to_s3(model, bucket_name, model_s3_path)

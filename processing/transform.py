@@ -68,7 +68,7 @@ class AlpacaProcessor:
         """
         self.start = start_date
         self.end = end_date
-        self.time_interval = time_interval
+        self.time_interval = time_interval 
 
         NY = "America/New_York"
         start_date = pd.Timestamp(start_date + " 09:30:00", tz=NY)
@@ -169,6 +169,13 @@ class AlpacaProcessor:
             }
         )
         df = df[['timestamp','open','high','low','close','volume','tic']]
+
+        # if dates are none when cleaning, then we need to set
+        if not hasattr(self, 'start'):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            # Find the earliest and latest dates in the DataFrame
+            self.start = df['timestamp'].min().strftime('%Y-%m-%d')
+            self.end = df['timestamp'].max().strftime('%Y-%m-%d')
 
         print("Data cleaning started")
         tic_list = np.unique(df.tic.values)

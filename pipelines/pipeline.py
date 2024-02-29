@@ -166,6 +166,10 @@ def get_pipeline(
         step_process.properties.ProcessingOutputConfig
         .Outputs["validation"].S3Output.S3Uri
     )
+    s3_testing_path = (
+        step_process.properties.ProcessingOutputConfig
+        .Outputs["testing"].S3Output.S3Uri
+    )
 
     rl_train = Estimator(
         image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
@@ -195,13 +199,18 @@ def get_pipeline(
             )
         }
     )
-    sklearn_eval = SKLearnProcessor(
-        framework_version="0.23-1",
+    script_eval = ScriptProcessor(
+        image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
+                   'rl-trading-v1:train'),
         instance_type="ml.m5.xlarge",
         instance_count=1,
         base_job_name=f"{base_job_prefix}/dlr-eval",
         sagemaker_session=sagemaker_session,
         role=role,
+        command=["python3"],
+        env={
+            "S3_TESTING": s3_testing_path,
+        }
     )
     evaluation_report = PropertyFile(
         name="EvaluationReport",
@@ -210,7 +219,7 @@ def get_pipeline(
     )
     step_eval = ProcessingStep(
         name="DLREvaluation",
-        processor=sklearn_eval,
+        processor=script_eval,
         inputs=[
             ProcessingInput(
                 source=step_process.properties.ProcessingOutputConfig.Outputs[
@@ -221,7 +230,8 @@ def get_pipeline(
         ],
         outputs=[
             ProcessingOutput(
-        output_name="evaluation", source="/opt/ml/processing/evaluation"
+                output_name="evaluation", 
+                source="/opt/ml/processing/evaluation/evaluation.json"
             ),
         ],
         code=os.path.join(BASE_DIR, "evaluate.py"),
@@ -231,9 +241,9 @@ def get_pipeline(
 
     model_metrics = ModelMetrics(
         model_statistics=MetricsSource(
-            s3_uri="{}/evaluation.json".format(
-                step_eval.arguments["ProcessingOutputConfig"] \
-                    ["Outputs"][0]["S3Output"]["S3Uri"]
+            s3_uri=(
+                step_eval.properties.ProcessingOutputConfig
+                .Outputs["evaluation"].S3Output.S3Uri
             ),
             content_type="application/json",
         )

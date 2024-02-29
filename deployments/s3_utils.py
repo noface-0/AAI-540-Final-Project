@@ -35,6 +35,29 @@ def save_model_to_s3(model, bucket_name, s3_path):
         )
 
 
+def save_file_to_s3(local_file_path, bucket_name, s3_path):
+    """
+    Save a file to an S3 bucket from a local file path.
+
+    Parameters:
+    - local_file_path (str): The local file path of the file to upload.
+    - bucket_name (str): The name of the S3 bucket.
+    - s3_path (str): The S3 path where the file will be saved.
+    """
+    s3 = boto3.client('s3')
+    try:
+        with open(local_file_path, 'rb') as file:
+            s3.upload_fileobj(file, bucket_name, s3_path)
+        print(
+            f"File successfully uploaded to s3://{bucket_name}/{s3_path}"
+        )
+    except Exception as e:
+        print(
+            f"Failed to upload the file to s3://{bucket_name}/{s3_path}. "
+            f"Error: {e}"
+        )
+
+
 def load_data_from_s3(s3_path: str):
     """
     Load data from an S3 path.
@@ -72,11 +95,15 @@ def load_model_from_local_path(local_path):
     return model
 
 
-def create_secret(key_name: str, key_value: str):
+def create_secret(
+        key_name: str, 
+        key_value: str,
+        description: str=None
+):
     client = boto3.client('secretsmanager')
     response = client.create_secret(
         Name=key_name,
-        Description='Alpaca base url',
+        Description=description,
         SecretString=key_value
     )
 

@@ -151,6 +151,8 @@ class DRLAgent:
         eval_file_path = os.path.join(
             BASE_DIR, 'models', 'runs', 'eval', 'evaluation.json'
         )
+        os.makedirs(os.path.dirname(eval_file_path), exist_ok=True)
+
         eval_dict = {
             "final_episode_return": episode_return,
         }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 from processing.transform import AlpacaProcessor
 from agents.dlr import DRLAgent
 from config.training import TRAIN_SPLIT
@@ -15,7 +16,7 @@ def train(
     env,
     model_name,
     if_vix=True,
-    data=None,
+    data=pd.DataFrame(),
     split=True,
     api_key=None,
     api_secret=None,
@@ -102,7 +103,7 @@ def test(
     env,
     model_name,
     if_vix=True,
-    data=None,
+    data=pd.DataFrame(),
     split=True,
     api_key=None,
     api_secret=None,
