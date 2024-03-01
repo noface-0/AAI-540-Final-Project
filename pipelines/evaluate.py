@@ -23,10 +23,10 @@ if __name__ == "__main__":
     evaluation_data = load_data_from_s3(eval_s3_path)
     evaluation_data_json = json.loads(evaluation_data.decode('utf-8'))
 
-    evaluation_output_dir = "/opt/ml/processing/models/runs/evaluation"
+    evaluation_output_dir = "/opt/ml/processing/evaluation"
     evaluation_output_file = "evaluation.json"
     evaluation_output_path = os.path.join(evaluation_output_dir, evaluation_output_file)
-    
+
     try:
         if os.path.exists(evaluation_output_dir):
             print(f"Directory {evaluation_output_dir} exists.")

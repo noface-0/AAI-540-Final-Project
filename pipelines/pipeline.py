@@ -231,7 +231,7 @@ def get_pipeline(
         outputs=[
             ProcessingOutput(
                 output_name="evaluation", 
-                source="/opt/ml/processing/models/runs/evaluation/evaluation.json"
+                source="/opt/ml/processing/evaluation"
             ),
         ],
         code=os.path.join(BASE_DIR, "evaluate.py"),
@@ -285,7 +285,8 @@ def get_pipeline(
             model_approval_status,
             input_data,
         ],
-        steps=[step_process, step_train, step_eval, step_cond],
+        # steps=[step_process, step_train, step_eval, step_cond],
+        steps=[step_eval],
         sagemaker_session=sagemaker_session,
     )
 
