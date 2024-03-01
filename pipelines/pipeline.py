@@ -292,7 +292,7 @@ def get_pipeline(
         output_name="other_key", 
         output_type=LambdaOutputTypeEnum.String
     )
-    step_deploy_lambda = LambdaStep(
+    step_deploy_endpoint = LambdaStep(
         name="EndpointCreateStep",
         lambda_func=func,
         inputs={
@@ -330,7 +330,7 @@ def get_pipeline(
         if_steps=[
             step_register, 
             step_create_model, 
-            step_create_model
+            step_deploy_endpoint
         ],
         else_steps=[],
     )
