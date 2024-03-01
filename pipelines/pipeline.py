@@ -231,7 +231,7 @@ def get_pipeline(
         outputs=[
             ProcessingOutput(
                 output_name="evaluation", 
-                source="/opt/ml/processing/evaluation/evaluation.json"
+                source="/opt/ml/processing/models/runs/evaluation/evaluation.json"
             ),
         ],
         code=os.path.join(BASE_DIR, "evaluate.py"),
@@ -242,9 +242,9 @@ def get_pipeline(
     model_metrics = ModelMetrics(
         model_statistics=MetricsSource(
             s3_uri=(
-                "s3://rl-trading-v1-runs/runs/evaluation/"
-                "evaluation.json"
-            ),
+            step_process.properties.ProcessingOutputConfig
+            .Outputs["evaluation"].S3Output.S3Uri
+        ),
             content_type="application/json",
         )
     )
