@@ -1,5 +1,6 @@
 import os
 import io
+import shutil
 import argparse
 import pandas as pd
 import boto3
@@ -124,6 +125,22 @@ def train_model(
     )
 
 
+def copy_file(local_source_path: str, destination_path: str):
+    """
+    Copy a file from a local source path to another specified path.
+
+    :param local_source_path: Path to the source file.
+    :param destination_path: Path where the file should be saved.
+    """
+    destination_dir = os.path.dirname(destination_path)
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
+
+    shutil.copy2(local_source_path, destination_path)
+
+    print(f"File successfully copied to {destination_path}")
+
+
 if __name__ == "__main__":
     import os
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -156,11 +173,15 @@ if __name__ == "__main__":
 
     bucket_name = 'rl-trading-v1-runs'
     local_path = f'{BASE_DIR}/models/runs/papertrading_erl_retrain/actor.pth'
+    local_filename = os.path.basename(local_path)
     local_eval_path = f'{BASE_DIR}/models/runs/eval/evaluation.json'
+    destination_path = os.path.join("/opt/ml/model", local_filename)
+
     eval_s3_path = "runs/evaluation/evaluation.json"
     model_s3_path = 'runs/models/actor.pth'
 
     model = load_model_from_local_path(local_path)
 
+    copy_file(local_path, destination_path)
     save_file_to_s3(local_eval_path, bucket_name, eval_s3_path)
     save_model_to_s3(model, bucket_name, model_s3_path)
