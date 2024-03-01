@@ -27,15 +27,18 @@ from sagemaker.workflow.parameters import (
     ParameterString,
 )
 from sagemaker.workflow.pipeline import Pipeline
-from sagemaker.workflow.pipeline_context import PipelineSession
+from sagemaker.workflow.lambda_step import (
+    LambdaStep,
+    LambdaOutput,
+    LambdaOutputTypeEnum,
+)
 from sagemaker.workflow.properties import PropertyFile
 from sagemaker.workflow.steps import (
     ProcessingStep,
     TrainingStep,
-    CreateModelStep,
-    EndpointConfigStep, 
-    EndpointStep
+    CreateModelStep
 )
+from sagemaker.lambda_helper import Lambda
 from sagemaker.workflow.step_collections import (
     RegisterModel
 )
@@ -271,6 +274,35 @@ def get_pipeline(
         ),
     )
 
+    func = Lambda(
+        function_name="DeployModelFunction",
+        execution_role_arn=role,
+        script="code/lambda_helper.py",
+        handler="lambda_helper.endpoint_handler",
+    )
+    output_param_1 = LambdaOutput(
+        output_name="statusCode", 
+        output_type=LambdaOutputTypeEnum.String
+    )
+    output_param_2 = LambdaOutput(
+        output_name="body", 
+        output_type=LambdaOutputTypeEnum.String
+    )
+    output_param_3 = LambdaOutput(
+        output_name="other_key", 
+        output_type=LambdaOutputTypeEnum.String
+    )
+    step_deploy_lambda = LambdaStep(
+        name="EndpointCreateStep",
+        lambda_func=func,
+        inputs={
+            "model_name": step_create_model.properties.ModelName,
+            "endpoint_config_name": f"{pipeline_name}-endpoint-config",
+            "endpoint_name": f"{pipeline_name}-endpoint",
+        },
+        outputs=[output_param_1, output_param_2, output_param_3],
+    )
+
     step_register = RegisterModel(
         name="RegisterDLRModel",
         estimator=rl_train,
@@ -295,25 +327,8 @@ def get_pipeline(
     step_cond = ConditionStep(
         name="DLREpisodeReturnCond",
         conditions=[cond_lte],
-        if_steps=[step_register, step_create_model],
+        if_steps=[step_register, step_create_model, step_create_model],
         else_steps=[],
-    )
-
-    step_endpoint_config = EndpointConfigStep(
-        name="CreateDLREndpointConfig",
-        model_name=step_create_model.properties.ModelName,
-        initial_instance_count=1,
-        instance_type="ml.m5.large",
-    )
-    step_create_endpoint = EndpointStep(
-        name="CreateDLREndpoint",
-        endpoint_name=ParameterString(
-            name="EndpointName",
-            default_value=f"{pipeline_name}-endpoint"
-        ),
-        endpoint_config_name=step_endpoint_config.properties.EndpointConfigName,
-        update=False,
-        depends_on=[step_create_model]
     )
 
     pipeline = Pipeline(
@@ -330,9 +345,6 @@ def get_pipeline(
             step_train, 
             step_eval, 
             step_cond,
-            step_create_model,
-            step_endpoint_config,
-            step_create_endpoint,
         ],
         sagemaker_session=sagemaker_session,
     )
