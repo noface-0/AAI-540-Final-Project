@@ -14,6 +14,19 @@ def load_model_from_s3(bucket_name, s3_path):
     return model
 
 
+def save_model_from_s3(
+        bucket_name, 
+        s3_path, 
+        local_file_path
+):
+    s3 = boto3.client('s3')
+    obj = s3.get_object(Bucket=bucket_name, Key=s3_path)
+    bytestream = io.BytesIO(obj['Body'].read())
+    
+    with open(local_file_path, 'wb') as local_file:
+        local_file.write(bytestream.getvalue())
+
+
 def save_model_to_s3(model, bucket_name, s3_path):
     """
     Save a PyTorch model to an S3 bucket.

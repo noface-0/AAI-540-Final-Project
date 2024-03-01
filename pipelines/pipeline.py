@@ -15,6 +15,7 @@ from sagemaker.processing import (
     ProcessingOutput,
     ScriptProcessor,
 )
+from sagemaker.model import Model
 from sagemaker.sklearn.processing import SKLearnProcessor
 from sagemaker.workflow.conditions import ConditionGreaterThanOrEqualTo
 from sagemaker.workflow.condition_step import (
@@ -31,8 +32,11 @@ from sagemaker.workflow.properties import PropertyFile
 from sagemaker.workflow.steps import (
     ProcessingStep,
     TrainingStep,
+    CreateModelStep
 )
-from sagemaker.workflow.step_collections import RegisterModel
+from sagemaker.workflow.step_collections import (
+    RegisterModel
+)
 from processing.extract import extract_stock_data
 
 
@@ -199,6 +203,7 @@ def get_pipeline(
             )
         }
     )
+
     script_eval = ScriptProcessor(
         image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
                    'rl-trading-v1:train'),
@@ -238,7 +243,6 @@ def get_pipeline(
         property_files=[evaluation_report],
         depends_on=[step_train]
     )
-
     model_metrics = ModelMetrics(
         model_statistics=MetricsSource(
             s3_uri=(
@@ -248,6 +252,7 @@ def get_pipeline(
             content_type="application/json",
         )
     )
+
     step_register = RegisterModel(
         name="RegisterDLRModel",
         estimator=rl_train,
@@ -260,6 +265,7 @@ def get_pipeline(
         approval_status=model_approval_status,
         model_metrics=model_metrics
     )
+
     cond_lte = ConditionGreaterThanOrEqualTo(
         left=JsonGet(
             step=step_eval,
@@ -275,7 +281,22 @@ def get_pipeline(
         else_steps=[],
     )
 
-    # pipeline instance
+    model = Model(
+        image_uri=('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
+                   'rl-trading-v1:train'),
+        model_data=step_train.properties.ModelArtifacts.S3ModelArtifacts,
+        sagemaker_session=sagemaker_session,
+        role=role,
+        entry_point="deployments/deploy_model.py"
+    )
+    create_model_step = CreateModelStep(
+        name="CreateDLRModel",
+        model=model,
+        inputs=sagemaker.inputs.CreateModelInput(
+            instance_type="ml.t2.medium",
+        ),
+    )
+
     pipeline = Pipeline(
         name=pipeline_name,
         parameters=[
@@ -285,7 +306,13 @@ def get_pipeline(
             model_approval_status,
             input_data,
         ],
-        steps=[step_process, step_train, step_eval, step_cond],
+        steps=[
+            step_process, 
+            step_train, 
+            step_eval, 
+            step_cond,
+            create_model_step
+        ],
         sagemaker_session=sagemaker_session,
     )
 

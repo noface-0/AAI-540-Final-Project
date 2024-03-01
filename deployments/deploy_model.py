@@ -7,6 +7,7 @@ from config.models import ERL_PARAMS, SAC_PARAMS
 from config.training import TIME_INTERVAL, AGENT
 from environments.alpaca import AlpacaPaperTrading
 from utils.utils import get_var
+from deployments.s3_utils import save_model_from_s3
 
 app = FastAPI()
 
@@ -23,6 +24,19 @@ def start_trading():
         "ppo": ERL_PARAMS,
         "sac": SAC_PARAMS
     }
+    bucket_name = 'rl-trading-v1-runs'
+    model_s3_path = 'runs/models/actor.pth'
+
+    try:
+        save_model_from_s3(
+            bucket_name=bucket_name,
+            s3_path=model_s3_path,
+            local_file_path='models/runs/papertrading_erl_retrain'
+        )
+        print("loaded model from S3")
+    except Exception:
+        pass
+
     params = agent_configs.get(AGENT)
 
     paper_trading_erl = AlpacaPaperTrading(

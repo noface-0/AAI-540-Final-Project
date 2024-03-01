@@ -20,7 +20,6 @@ from config.training import (
     TEST_END_DATE,
     AGENT
 )
-from utils.utils import get_var
 from deployments.s3_utils import (
     load_data_from_s3,
     load_model_from_local_path,
@@ -150,14 +149,14 @@ if __name__ == "__main__":
     parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
     args = parser.parse_args()
 
-    # train_input = os.environ.get('S3_TRAINING')
-    # val_input = os.environ.get('S3_VALIDATION')
+    train_input = os.environ.get('S3_TRAINING')
+    val_input = os.environ.get('S3_VALIDATION')
 
-    # train_data = load_data_from_s3(train_input)
-    # val_data = load_data_from_s3(val_input)
+    train_data = load_data_from_s3(train_input)
+    val_data = load_data_from_s3(val_input)
 
-    # train_data_df = pd.read_parquet(io.BytesIO(train_data))
-    # validation_data_df = pd.read_parquet(io.BytesIO(val_data))
+    train_data_df = pd.read_parquet(io.BytesIO(train_data))
+    validation_data_df = pd.read_parquet(io.BytesIO(val_data))
 
     api_key = get_secret("ALPACA_API_KEY")
     api_secret = get_secret("ALPACA_API_SECRET")
