@@ -242,8 +242,8 @@ def get_pipeline(
     model_metrics = ModelMetrics(
         model_statistics=MetricsSource(
             s3_uri=(
-                step_eval.properties.ProcessingOutputConfig
-                .Outputs["evaluation"].S3Output.S3Uri
+                "s3://rl-trading-v1-runs/runs/evaluation/"
+                "evaluation.json"
             ),
             content_type="application/json",
         )
