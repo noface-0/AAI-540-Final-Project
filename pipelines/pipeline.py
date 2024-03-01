@@ -285,8 +285,7 @@ def get_pipeline(
             model_approval_status,
             input_data,
         ],
-        # steps=[step_process, step_train, step_eval, step_cond],
-        steps=[step_eval],
+        steps=[step_process, step_train, step_eval, step_cond],
         sagemaker_session=sagemaker_session,
     )
 
