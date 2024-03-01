@@ -264,7 +264,7 @@ def get_pipeline(
         left=JsonGet(
             step=step_eval,
             property_file=evaluation_report,
-            json_path="final_episode_return.value",
+            json_path="final_episode_return",
         ),
         right=1,
     )
