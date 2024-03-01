@@ -327,7 +327,11 @@ def get_pipeline(
     step_cond = ConditionStep(
         name="DLREpisodeReturnCond",
         conditions=[cond_lte],
-        if_steps=[step_register, step_create_model, step_create_model],
+        if_steps=[
+            step_register, 
+            step_create_model, 
+            step_create_model
+        ],
         else_steps=[],
     )
 
