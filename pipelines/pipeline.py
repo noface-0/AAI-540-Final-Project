@@ -277,7 +277,7 @@ def get_pipeline(
     func = Lambda(
         function_name="DeployModelFunction",
         execution_role_arn=role,
-        script="code/lambda_helper.py",
+        script="lambda_helper.py",
         handler="lambda_helper.endpoint_handler",
     )
     output_param_1 = LambdaOutput(
