@@ -55,7 +55,15 @@ def deploy_to_fargate(event, context):
                     },
                 ],
                 'memory': 512,
-                'cpu': 256
+                'cpu': 256,
+                'logConfiguration': {
+                    'logDriver': 'awslogs',
+                    'options': {
+                        'awslogs-group': '/ecs/rl-trading-system',
+                        'awslogs-region': 'us-east-1',
+                        'awslogs-stream-prefix': 'ecs'
+                    }
+                }
             },
         ],
         requiresCompatibilities=['FARGATE'],
