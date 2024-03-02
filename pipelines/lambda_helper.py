@@ -47,6 +47,12 @@ def deploy_to_fargate(event, context):
                 'name': 'rl-trading-v1',
                 'image': ecr_image_url,
                 'essential': True,
+                'entryPoint': [
+                    "uvicorn", 
+                    "deployments/deploy_model:app", 
+                    "--host", "0.0.0.0", 
+                    "--port", "8080"
+                ],
                 'portMappings': [
                     {
                         'containerPort': 80,
