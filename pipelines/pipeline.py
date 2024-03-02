@@ -194,13 +194,13 @@ def get_pipeline(
             "S3_VALIDATION": s3_validation_path
         },
         metric_definitions = [
-            {"Name": "step","Regex": r"\|\s+'step':\s+([0-9]+)\s+"},
-            {"Name": "time","Regex": r"'time':\s+([0-9.]+)\s+\|"},
-            {"Name": "avgR","Regex": r"'avgR':\s+([0-9.]+)\s+"},
-            {"Name": "stdR","Regex": r"'stdR':\s+([0-9.]+)\s+"},
-            {"Name": "avgS","Regex": r"'avgS':\s+([0-9.]+)\s+\|"},
-            {"Name": "objC","Regex": r"'objC':\s+([0-9.]+)\s+"},
-            {"Name": "objA","Regex": r"'objA':\s+([0-9.]+)"}
+            {"Name": "step", "Regex": r"\|\s+`step`:\s+([0-9]+)\s+"},
+            {"Name": "time", "Regex": r"`time`:\s+([0-9.]+)\s+\|"},
+            {"Name": "avgR", "Regex": r"`avgR`:\s+([0-9.]+)\s+"},
+            {"Name": "stdR", "Regex": r"`stdR`:\s+([0-9.]+)\s+"},
+            {"Name": "avgS", "Regex": r"`avgS`:\s+([0-9.]+)\s+\|"},
+            {"Name": "objC", "Regex": r"`objC`:\s+([0-9.]+)\s+"},
+            {"Name": "objA", "Regex": r"`objA`:\s+([0-9.]+)"}
         ]
     )
     step_train = TrainingStep(
