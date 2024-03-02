@@ -6,8 +6,8 @@ aws_account_id=$AWS_ACCOUNT_ID
 region=us-east-1
 repository_name="rl-trading-v1"
 # Set the tag based on the branch
-if [ "$branch" = "main" ]; then
-    tag="production"
+if [ "$branch" = "dev" ]; then
+    tag="deploy"
 fi
 # Login to AWS ECR
 aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $aws_account_id.dkr.ecr.$region.amazonaws.com
