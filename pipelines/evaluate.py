@@ -8,12 +8,18 @@ from deployments.s3_utils import (
     load_data_from_s3
 )
 
-# evaluation already performed. Just extracting for Sagemaker step
+# evaluation already performed. Just extracting for Sagemaker condition step
 if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-    parser = argparse.ArgumentParser(description="Process input data for testing.")
-    parser.add_argument('--testing', type=str, default=os.environ.get('S3_TESTING'))
+    parser = argparse.ArgumentParser(
+        description="Process input data for testing."
+    )
+    parser.add_argument(
+        '--testing', 
+        type=str, 
+        default=os.environ.get('S3_TESTING')
+    )
     args = parser.parse_args()
 
     # eval has already taken place in the training
@@ -25,7 +31,9 @@ if __name__ == "__main__":
 
     evaluation_output_dir = "/opt/ml/processing/evaluation"
     evaluation_output_file = "evaluation.json"
-    evaluation_output_path = os.path.join(evaluation_output_dir, evaluation_output_file)
+    evaluation_output_path = os.path.join(
+        evaluation_output_dir, evaluation_output_file
+    )
 
     try:
         if os.path.exists(evaluation_output_dir):

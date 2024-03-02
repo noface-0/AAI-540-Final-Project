@@ -27,7 +27,12 @@ def train(
 
     if data.empty:
         # download data
-        data = dp.download_data(ticker_list, start_date, end_date, time_interval)
+        data = dp.download_data(
+            ticker_list, 
+            start_date, 
+            end_date, 
+            time_interval
+        )
     else:
         if split:
             train_size = int(len(data) * TRAIN_SPLIT)
@@ -83,14 +88,18 @@ def train(
         agent = DRLAgent(env=env_instance)
         model = agent.get_model(model_name, model_kwargs=agent_params)
         trained_model = agent.train_model(
-            model=model, tb_log_name=model_name, total_timesteps=total_timesteps
+            model=model, 
+            tb_log_name=model_name, 
+            total_timesteps=total_timesteps
         )
         print("Training is finished!")
         trained_model.save(cwd)
         print("Trained model is saved in " + str(cwd))
 
     else:
-        raise ValueError("DRL library input is NOT supported. Please check.")
+        raise ValueError(
+            "DRL library input is NOT supported. Please check."
+        )
 
 
 def test(
@@ -113,7 +122,12 @@ def test(
     dp = AlpacaProcessor(api_key, api_secret, api_url)
     # download data
     if data.empty:
-        data = dp.download_data(ticker_list, start_date, end_date, time_interval)
+        data = dp.download_data(
+            ticker_list, 
+            start_date, 
+            end_date, 
+            time_interval
+        )
     else:
         if split:
             train_size = int(len(data) * TRAIN_SPLIT)

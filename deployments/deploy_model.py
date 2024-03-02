@@ -27,6 +27,7 @@ def start_trading():
     bucket_name = 'rl-trading-v1-runs'
     model_s3_path = 'runs/models/actor.pth'
 
+    # retrieve most recent model
     try:
         save_model_from_s3(
             bucket_name=bucket_name,

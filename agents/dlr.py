@@ -145,7 +145,6 @@ class DRLAgent:
                 if done:
                     break
         print("Test Finished")
-        # return episode total_assets on testing data
         print("episode_return", episode_return)
 
         eval_file_path = os.path.join(

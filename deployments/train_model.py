@@ -142,11 +142,23 @@ def copy_file(local_source_path: str, destination_path: str):
 
 if __name__ == "__main__":
     import os
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    BASE_DIR = os.path.dirname(
+        os.path.dirname(os.path.realpath(__file__))
+    )
 
-    parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument('--training', type=str, default=os.environ.get('S3_TRAINING'))
-    parser.add_argument('--validation', type=str, default=os.environ.get('S3_VALIDATION'))
+    parser = argparse.ArgumentParser(
+        description="Process input data for training."
+    )
+    parser.add_argument(
+        '--training', 
+        type=str, 
+        default=os.environ.get('S3_TRAINING')
+    )
+    parser.add_argument(
+        '--validation', 
+        type=str, 
+        default=os.environ.get('S3_VALIDATION')
+    )
     args = parser.parse_args()
 
     train_input = os.environ.get('S3_TRAINING')

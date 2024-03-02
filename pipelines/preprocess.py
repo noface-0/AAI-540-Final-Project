@@ -25,7 +25,8 @@ def process_data(df):
     )
     
     numerical_cols = [
-        col for col in df.select_dtypes(include=['float64', 'int64']).columns 
+        col for col in 
+        df.select_dtypes(include=['float64', 'int64']).columns 
         if col != "timestamp"
     ]
     
@@ -42,11 +43,17 @@ def process_data(df):
         [col for col in df.columns if col 
          not in numerical_cols or col == "timestamp"]
     
-    df_reconstructed = pd.DataFrame(df_transformed, columns=transformed_columns)
+    df_reconstructed = pd.DataFrame(
+        df_transformed, columns=transformed_columns
+    )
     
     df_shuffled = df_reconstructed.sample(frac=1, random_state=42)
-    train, temp = train_test_split(df_shuffled, test_size=0.3, random_state=42)
-    validation, test = train_test_split(temp, test_size=(0.5), random_state=42)
+    train, temp = train_test_split(
+        df_shuffled, test_size=0.3, random_state=42
+    )
+    validation, test = train_test_split(
+        temp, test_size=(0.5), random_state=42
+    )
     
     opt_dir = pathlib.Path("/opt/ml/processing")
     train_dir = opt_dir / 'training'
@@ -62,9 +69,15 @@ def process_data(df):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process input data for training.")
-    parser.add_argument("--input-data", type=str, required=True,
-                        help="The input data.")
+    parser = argparse.ArgumentParser(
+        description="Process input data for training."
+    )
+    parser.add_argument(
+        "--input-data", 
+        type=str, 
+        required=True,
+        help="The input data."
+    )
     args = parser.parse_args()
 
     base_dir = "/opt/ml/processing"
