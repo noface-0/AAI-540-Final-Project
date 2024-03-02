@@ -29,7 +29,7 @@ us_holidays = holidays.UnitedStates()
 def process_indicators(df):
     df = df.copy()
     # Convert 'Timestamp' to datetime and sort
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df.sort_values(by='timestamp', inplace=True)
     
     # Calculate day of the week
