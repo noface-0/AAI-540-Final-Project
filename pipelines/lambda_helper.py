@@ -81,7 +81,7 @@ def deploy_to_fargate(event, context):
         ['taskDefinition']['taskDefinitionArn']
 
     run_task_response = ecs_client.run_task(
-        cluster='dev-cluster',
+        cluster='rl-trading-dev-cluster',
         launchType='FARGATE',
         taskDefinition=task_definition_arn,
         count=1,
