@@ -3,7 +3,7 @@ import boto3
 
 # reference: https://github.com/aws/amazon-sagemaker-examples/blob/main/sagemaker-pipelines/tabular/lambda-step/sagemaker-pipelines-lambda-step.ipynb
 
-def endpoint_handler(event, context):
+def deploy_to_sagemaker_endpoint(event, context):
     """ """
     sm_client = boto3.client("sagemaker")
 

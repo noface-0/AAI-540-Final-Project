@@ -278,7 +278,7 @@ def get_pipeline(
         function_name="DeployModelFunction",
         execution_role_arn=role,
         script=os.path.join(BASE_DIR, "lambda_helper.py"),
-        handler="lambda_helper.endpoint_handler",
+        handler="lambda_helper.deploy_to_fargate",
     )
     output_param_1 = LambdaOutput(
         output_name="statusCode", 
@@ -299,6 +299,8 @@ def get_pipeline(
             "model_name": step_create_model.properties.ModelName,
             "endpoint_config_name": f"{pipeline_name}-endpoint-config",
             "endpoint_name": f"{pipeline_name}-endpoint",
+            "image_url": ('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
+                   'rl-trading-v1:train')
         },
         outputs=[output_param_1, output_param_2, output_param_3],
     )
