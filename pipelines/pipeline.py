@@ -192,7 +192,16 @@ def get_pipeline(
         environment={
             "S3_TRAINING": s3_training_path,
             "S3_VALIDATION": s3_validation_path
-        }
+        },
+        metric_definitions = [
+            {"Name": "step","Regex": r"\|\s+'step':\s+([0-9]+)\s+"},
+            {"Name": "time","Regex": r"'time':\s+([0-9.]+)\s+\|"},
+            {"Name": "avgR","Regex": r"'avgR':\s+([0-9.]+)\s+"},
+            {"Name": "stdR","Regex": r"'stdR':\s+([0-9.]+)\s+"},
+            {"Name": "avgS","Regex": r"'avgS':\s+([0-9.]+)\s+\|"},
+            {"Name": "objC","Regex": r"'objC':\s+([0-9.]+)\s+"},
+            {"Name": "objA","Regex": r"'objA':\s+([0-9.]+)"}
+        ]
     )
     step_train = TrainingStep(
         name="DRLModelTrain",
