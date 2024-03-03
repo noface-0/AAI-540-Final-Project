@@ -304,6 +304,7 @@ def get_pipeline(
             "model_name": step_create_model.properties.ModelName,
             "endpoint_config_name": f"{pipeline_name}-endpoint-config",
             "endpoint_name": f"{pipeline_name}-endpoint",
+            "execution_role_arn": role,
             "image_url": ('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
                    'rl-trading-v1:train')
         },
