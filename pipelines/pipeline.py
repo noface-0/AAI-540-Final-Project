@@ -297,10 +297,6 @@ def get_pipeline(
         output_name="body", 
         output_type=LambdaOutputTypeEnum.String
     )
-    output_param_3 = LambdaOutput(
-        output_name="other_key", 
-        output_type=LambdaOutputTypeEnum.String
-    )
     step_deploy_endpoint = LambdaStep(
         name="EndpointCreateStep",
         lambda_func=func,
@@ -311,7 +307,7 @@ def get_pipeline(
             "image_url": ('914326228175.dkr.ecr.us-east-1.amazonaws.com/'
                    'rl-trading-v1:train')
         },
-        outputs=[output_param_1, output_param_2, output_param_3],
+        outputs=[output_param_1, output_param_2],
     )
 
     step_register = RegisterModel(

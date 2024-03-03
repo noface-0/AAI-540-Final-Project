@@ -164,11 +164,11 @@ if __name__ == "__main__":
     train_input = os.environ.get('S3_TRAINING')
     val_input = os.environ.get('S3_VALIDATION')
 
-    train_data = load_data_from_s3(train_input)
-    val_data = load_data_from_s3(val_input)
+    # train_data = load_data_from_s3(train_input)
+    # val_data = load_data_from_s3(val_input)
 
-    train_data_df = pd.read_parquet(io.BytesIO(train_data))
-    validation_data_df = pd.read_parquet(io.BytesIO(val_data))
+    # train_data_df = pd.read_parquet(io.BytesIO(train_data))
+    # validation_data_df = pd.read_parquet(io.BytesIO(val_data))
 
     api_key = get_secret("ALPACA_API_KEY")
     api_secret = get_secret("ALPACA_API_SECRET")
