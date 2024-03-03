@@ -16,7 +16,7 @@ def endpoint_handler(event, context):
                 'name': 'rl-trading-v1',
                 'image': ecr_image_url,
                 'essential': True,
-                'entryPoint': [
+                'command': [
                     "uvicorn", 
                     "deployments/deploy_model:app", 
                     "--host", "0.0.0.0", 
@@ -49,24 +49,36 @@ def endpoint_handler(event, context):
     task_definition_arn = task_definition_response \
         ['taskDefinition']['taskDefinitionArn']
 
-    run_task_response = ecs_client.run_task(
-        cluster='rl-trading-dev-cluster',
-        launchType='FARGATE',
-        taskDefinition=task_definition_arn,
-        count=1,
-        networkConfiguration={
-            'awsvpcConfiguration': {
-                'subnets': [
-                    'subnet-0bd001b0367876f50',
-                ],
-                'assignPublicIp': 'DISABLED'
+    try:
+        ecs_client.describe_services(
+            cluster='rl-trading-dev-cluster',
+            services=['rl-trading-service']
+        )
+        ecs_client.update_service(
+            cluster='rl-trading-dev-cluster',
+            service='rl-trading-service',
+            taskDefinition=task_definition_arn
+        )
+    except ecs_client.exceptions.ServiceNotFoundException:
+        ecs_client.create_service(
+            cluster='rl-trading-dev-cluster',
+            serviceName='rl-trading-service',
+            taskDefinition=task_definition_arn,
+            desiredCount=1,
+            launchType='FARGATE',
+            networkConfiguration={
+                'awsvpcConfiguration': {
+                    'subnets': [
+                        'subnet-0bd001b0367876f50',
+                    ],
+                    'assignPublicIp': 'DISABLED'
+                }
             }
-        }
-    )
+        )
 
     return {
         "statusCode": 200,
-        "body": json.dumps("Deployed to Fargate"),
+        "body": json.dumps("Deployed as ECS Service"),
     }
 
 

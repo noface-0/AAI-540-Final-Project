@@ -22,6 +22,8 @@ test_translate.py
 pylintrc
 pylintrc.test
 
+*.png
+
 # most of .gitignore (except `lib`)
 #
 # Python
