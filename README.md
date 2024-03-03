@@ -157,3 +157,37 @@ By deploying to AWS Fargate using a Lambda function, we gain a more flexible and
         outputs=[output_param_1, output_param_2],
     )
 ```
+
+
+### Paper Trading Environment Deployment
+
+Following the deployment of our Deep Reinforcement Learning (DRL) model to AWS Fargate, the next crucial step involves the model's interaction with a paper trading environment. Unlike traditional deployments where outputs might be straightforward predictions or classifications, the outputs in our scenario are the actions taken by the agent within the simulated trading environment. This approach allows us to evaluate the model's performance in a risk-free setting before considering real-world application.
+
+#### Understanding Paper Trading Outputs
+
+In the context of our DRL stock trading system, the outputs are not typical batch inference job results or endpoint invocation responses. Instead, the outputs are the trading actions executed by the DRL agent, such as buy, sell, or hold decisions for different stocks. These actions are based on the model's predictions and are executed within the paper trading environment, which simulates real market conditions without actual financial risk.
+
+#### How It Works
+
+1. Model Invocation: The deployed model in AWS Fargate is invoked periodically (e.g., every minute, hour, or day, depending on the trading strategy) by sending it the latest market data. This data includes stock prices, volumes, and possibly other financial indicators that the model was trained on.
+
+2. Decision Making: Upon receiving the market data, the model processes it to make trading decisions. These decisions are determined by the policy the DRL agent has learned during its training phase, aiming to maximize the portfolio's value over time.
+
+3. Action Execution: The trading actions decided by the model are then executed within the paper trading environment. This environment accurately reflects market conditions but uses simulated money, thus providing a safe platform for testing.
+
+4. Performance Tracking: Each trade and its outcome are recorded to evaluate the model's trading strategy over time. Metrics such as return on investment (ROI), maximum drawdown, and Sharpe ratio can be calculated to assess performance.
+
+5. Feedback Loop: The results of the paper trading can be used as feedback to further refine and improve the DRL model. This iterative process helps in optimizing the trading strategy and adjusting to new market conditions.
+
+#### Benefits of Paper Trading Deployment
+
+- Risk-Free Evaluation: Allows for the testing of trading strategies without the risk of losing real money.
+- Realistic Market Interaction: Provides insights into how the model would perform under real market conditions.
+- Strategy Refinement: Enables continuous improvement of the trading strategy based on performance metrics.
+- Confidence Building: Builds confidence in the model's decision-making ability before any real-world application.
+
+By deploying our DRL model to a paper trading environment, we gain valuable insights into its potential effectiveness and areas for improvement in stock trading strategies. This step is essential for validating the model's capabilities and ensuring its readiness for real-world financial markets.
+
+<p align="center">
+  <img src="assets/paper_trading.png" alt="Agentic Trading Within Simulated Environment">
+</p>
