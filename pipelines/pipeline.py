@@ -286,8 +286,8 @@ def get_pipeline(
     func = Lambda(
         function_name="DeployModelFunction",
         execution_role_arn=role,
-        script=os.path.join(BASE_DIR, "fargate_helper.py"),
-        handler="fargate_helper.endpoint_handler",
+        script=os.path.join(BASE_DIR, "lambda_helper.py"),
+        handler="lambda_helper.endpoint_handler",
     )
     output_param_1 = LambdaOutput(
         output_name="statusCode", 
