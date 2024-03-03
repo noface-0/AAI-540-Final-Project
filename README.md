@@ -10,9 +10,17 @@ In addition to the technical implementation, we will explore the theoretical fou
 
 ### Dataset
 
-The dataset used in this Deep Reinforcement Learning Stock Trading Demonstration comprises historical stock data, including open, high, low, close prices, and volume for a selection of stocks over a specified period. This data is essential for training our DRL model, allowing it to learn and make predictions about future stock movements based on past trends. The dataset includes a diverse range of stocks from various sectors, ensuring a comprehensive learning experience for the model. The period covered by the dataset is from [start_date] to [end_date], encompassing [number_of_stocks] stocks. We have structured the system to train and trade on a subset of the dataset that corresponds with the predefined groupings within the stock market (SP 100, DOW 30, NAS 100, etc.). This rich dataset serves as the foundation for our demonstration, enabling the DRL model to simulate trading strategies and evaluate their performance in a controlled, paper trading environment.
+The dataset used in this Deep Reinforcement Learning Stock Trading Demonstration comprises historical stock data, including open, high, low, close prices, and volume for a selection of stocks over a specified period. This data is essential for training our DRL model, allowing it to learn and make predictions about future stock movements based on past trends. The dataset includes a diverse range of stocks from various sectors, ensuring a comprehensive learning experience for the model. The period covered by the dataset is from [start_date] to [end_date], encompassing [number_of_stocks] stocks. We have structured the system to train and trade on a subset of the dataset that corresponds with the predefined groupings within the stock market (SP 100, DOW 30, NAS 100, etc.). This rich dataset serves as the foundation for our demonstration, enabling the DRL model to simulate trading strategies and evaluate their performance in a controlled, paper trading environment. To enhance the predictive capabilities of our Deep Reinforcement Learning (DRL) model and provide a more nuanced understanding of the stock market dynamics, we augment select variables within our dataset. This augmentation process involves creating new variables or modifying existing ones to include derived metrics, such as moving averages, volatility indicators, and technical analysis signals. These augmented variables offer additional insights into market trends, momentum, and potential reversal points, which are crucial for making informed trading decisions.
 
-![Deep Reinforcement Learning Dataset](assets/dataset_head.png)
+By incorporating these augmented variables, our DRL model can analyze not only the raw historical stock data but also the underlying patterns and relationships between different market indicators. This enriched dataset allows the model to capture a more comprehensive picture of the market, leading to improved accuracy in predicting future stock movements and optimizing trading strategies. The augmentation process is carefully designed to ensure that the new variables are relevant, non-redundant, and contribute positively to the model's learning process, thereby enhancing its overall performance in the stock trading demonstration.
+
+<p align="center">
+  <img src="assets/dataset_head.png" alt="Deep Reinforcement Learning Dataset">
+</p>
+
+<p align="center">
+  <img src="assets/dataset_augmented.jpeg" alt="Deep Reinforcement Learning Dataset Augmented">
+</p>
 
 
 
@@ -47,7 +55,7 @@ Successful State
 
 In a successful state, the CI/CD DAG executes all tasks without errors, from code integration to deployment. This process begins with a developer pushing code changes to the repository, triggering the CI/CD pipeline. The pipeline then runs through several stages, such as linting, unit testing, integration testing, and deployment. Each task in the DAG is represented as a node, with edges indicating the flow and dependencies between tasks. A successful execution means that all tests pass, and the code changes are safely deployed to production, often visualized with green indicators in CI/CD tools.
 
-![CI/CD Pipeline (successful)](assets/ci_cd_dag_successful.png)
+![CI/CD Pipeline (successful)](assets/dag_successful.png)
 
 #### Failed State
 
@@ -60,3 +68,39 @@ Importance of Monitoring CI/CD DAG
 Monitoring the CI/CD DAG is essential for maintaining the health and efficiency of the development process. It provides real-time feedback on the state of the pipeline, enabling teams to quickly address issues and minimize downtime. Additionally, analyzing the patterns of success and failure over time can offer insights into common bottlenecks or areas for improvement in the codebase or the CI/CD process itself.
 
 In summary, the CI/CD DAG is a powerful tool for visualizing and managing the flow of code from development to production. By closely monitoring its states, teams can ensure a smooth, efficient, and reliable development lifecycle for their Deep Reinforcement Learning Stock Trading system.
+
+
+
+### Model Registry
+
+The model registry process in the provided codebase is encapsulated within the RegisterModel step of the SageMaker pipeline. This step is responsible for registering the trained model into SageMaker's Model Registry, which allows for version control, model metadata storage, and model lifecycle management. The registration step is configured with various parameters such as content types, response types, inference instances, transform instances, and the model package group name. Additionally, it specifies the approval status of the model, which can be crucial for automated deployment processes in production environments.
+
+Here's a brief overview of how the model registry step is set up in the pipeline:
+
+```python
+    step_register = RegisterModel(
+        name="RegisterDLRModel",
+        estimator=rl_train,
+        model_data=step_train.properties.ModelArtifacts.S3ModelArtifacts,
+        content_types=["application/x-parquet"],
+        response_types=["application/x-parquet"],
+        inference_instances=["ml.t2.medium", "ml.m5.large"],
+        transform_instances=["ml.m5.large"],
+        model_package_group_name=model_package_group_name,
+        approval_status=model_approval_status,
+        model_metrics=model_metrics
+    )
+
+    step_cond = ConditionStep(
+        name="DLREpisodeReturnCond",
+        conditions=[cond_lte],
+        if_steps=[
+            step_register, 
+            step_create_model, 
+            step_deploy_endpoint
+        ],
+        else_steps=[],
+    )
+```
+
+![Model Registry](assets/model_registry.png)
