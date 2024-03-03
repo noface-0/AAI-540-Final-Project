@@ -122,10 +122,10 @@ class Evaluator:
             "\n| `avgS`: Avg. steps per episode."
             "\n| `objC`: Critic network objective or loss function."
             "\n| `objA`: Actor network objective, avg Q value of critic."
-            f"\n| `step`:{'step':>8} | `time`:{'time':>8} | "
-            f"`avgR`:{'avgR':>8} | `stdR`:{'stdR':>6} | "
-            f"`avgS`:{'avgS':>6} | `objC`:{'objC':>8} | "
-            f"`objA`:{'objA':>8}"
+            f"\n| {'step':>8} | {'time':>8} | "
+            f"{'avgR':>8} | {'stdR':>6} | "
+            f"{'avgS':>6} | {'objC':>8} | "
+            f"{'objA':>8}"
         )
             
     def evaluate_and_save(
@@ -151,6 +151,8 @@ class Evaluator:
         used_time = time.time() - self.start_time
         self.recorder.append((self.total_step, used_time, avg_r))
         
-        print(f"| {self.total_step:8.2e}  {used_time:8.0f}  "
-              f"| {avg_r:8.2f}  {std_r:6.2f}  {avg_s:6.0f}  "
-              f"| {logging_tuple[0]:8.2f}  {logging_tuple[1]:8.2f}")
+        print(
+            f"| `step`:{self.total_step:8.2e} | `time`:{used_time:8.0f} | "
+            f"`avgR`:{avg_r:8.2f} | `stdR`:{std_r:6.2f} | `avgS`:{avg_s:6.0f} | "
+            f"`objC`:{logging_tuple[0]:8.2f} | `objA`:{logging_tuple[1]:8.2f} |"
+        )
