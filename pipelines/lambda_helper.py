@@ -6,9 +6,13 @@ def endpoint_handler(event, context):
     ecs_client = boto3.client('ecs')
     ecr_image_url = event["image_url"]
 
+    task_definition_arn = task_definition_response \
+        ['taskDefinition']['taskDefinitionArn']
+
     task_definition_response = ecs_client.register_task_definition(
         family='rl-trading-system',
         networkMode='awsvpc',
+        executionRoleArn=task_definition_arn,
         containerDefinitions=[
             {
                 'name': 'rl-trading-v1',
@@ -43,9 +47,6 @@ def endpoint_handler(event, context):
         cpu='256',
         memory='512'
     )
-
-    task_definition_arn = task_definition_response \
-        ['taskDefinition']['taskDefinitionArn']
 
     run_task_response = ecs_client.run_task(
         cluster='rl-trading-dev-cluster',
