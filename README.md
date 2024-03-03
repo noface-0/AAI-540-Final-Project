@@ -28,7 +28,13 @@ By incorporating these augmented variables, our DRL model can analyze not only t
 
 The setup phase is crucial for the successful implementation of our Deep Reinforcement Learning agent. It involves the establishment of a feature store and the creation of feature groups, which are essential for organizing and managing the data our model will learn from. A feature store is a centralized repository for storing, retrieving, and managing machine learning features. Within this store, feature groups are defined to categorize and isolate different sets of features relevant to specific aspects of stock trading, such as price trends, volume changes, and market sentiment. These groups facilitate efficient data handling and model training by structuring the dataset in a way that is both accessible and meaningful for the DRL model. By meticulously setting up our feature store and carefully defining our feature groups, we lay the groundwork for a robust and scalable machine learning pipeline that is primed for the complex task of stock trading. This setup not only streamlines the model training process but also enhances the model's ability to learn from a rich and diverse dataset, ultimately contributing to more informed and effective trading decisions. In the following sections, we will delve into the specifics of how these components are integrated into our system, accompanied by illustrative diagrams and screenshots to provide a clear understanding of the setup process.
 
-![Feature Store and Feature Groups Setup](assets/feature_groups.png)
+<p align="center">
+  <img src="assets/athena_tables.png" alt="Athena Tables" style="width: 90%;">
+</p>
+<p align="center">
+<img src="assets/feature_store.png" alt="Feature Store" style="width: 49%;">
+  <img src="assets/features.png" alt="Feature Store" style="width: 49%;">
+</p>
 
 
 
@@ -104,3 +110,50 @@ Here's a brief overview of how the model registry step is set up in the pipeline
 ```
 
 ![Model Registry](assets/model_registry.png)
+
+
+We adopt a unique approach to deployment that diverges from the conventional method of deploying models directly to a SageMaker endpoint. Instead, we leverage AWS Fargate, orchestrated by an AWS Lambda function, for deploying our trained models. This strategy allows us to benefit from the serverless computing environment provided by AWS Fargate, which offers both flexibility and scalability without the need to manage servers or clusters.
+
+Here's how the deployment process works in our system:
+
+1. Lambda Function Trigger: After the model has been registered in the SageMaker Model Registry with the necessary version control and metadata, a Lambda function is triggered. This function is responsible for initiating the deployment process to AWS Fargate.
+
+2. Deployment to AWS Fargate: The Lambda function retrieves the model from the SageMaker Model Registry and deploys it to a container in AWS Fargate. AWS Fargate allows us to run containers without having to manage servers or clusters, providing a highly scalable and flexible environment for our trading model.
+
+3. Configuration and Scaling: Within Fargate, we can easily configure the computing resources allocated to our model and scale up or down based on the demand. This is particularly useful for adapting to varying workloads in stock trading, where market conditions can change rapidly.
+
+4. Endpoint Creation: Once deployed, the model runs within a container in Fargate, and an endpoint is created. This endpoint can be accessed by our trading system to make predictions and execute trades based on the model's insights.
+
+5. Monitoring and Management: The entire process, from deployment to monitoring, is managed through AWS services, ensuring high availability and reliability. We can monitor the performance of our model in real-time and make adjustments as necessary.
+
+By deploying to AWS Fargate using a Lambda function, we gain a more flexible and scalable deployment solution compared to traditional SageMaker endpoints. This approach aligns with our system's needs.
+
+
+```python
+    func = Lambda(
+        function_name="DeployModelFunction",
+        execution_role_arn=role,
+        script=os.path.join(BASE_DIR, "lambda_helper.py"),
+        handler="lambda_helper.endpoint_handler",
+    )
+    output_param_1 = LambdaOutput(
+        output_name="statusCode", 
+        output_type=LambdaOutputTypeEnum.String
+    )
+    output_param_2 = LambdaOutput(
+        output_name="body", 
+        output_type=LambdaOutputTypeEnum.String
+    )
+    step_deploy_endpoint = LambdaStep(
+        name="EndpointCreateStep",
+        lambda_func=func,
+        inputs={
+            "model_name": step_create_model.properties.ModelName,
+            "endpoint_config_name": f"{pipeline_name}-endpoint-config",
+            "endpoint_name": f"{pipeline_name}-endpoint",
+            "execution_role_arn": role,
+            "image_url": image_url)
+        },
+        outputs=[output_param_1, output_param_2],
+    )
+```

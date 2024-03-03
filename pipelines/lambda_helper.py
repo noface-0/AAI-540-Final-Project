@@ -18,7 +18,7 @@ def endpoint_handler(event, context):
                 'essential': True,
                 'command': [
                     "uvicorn", 
-                    "deployments/deploy_model:app", 
+                    "deployments.deploy_model:app", 
                     "--host", "0.0.0.0", 
                     "--port", "8080"
                 ],
