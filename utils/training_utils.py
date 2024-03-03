@@ -122,8 +122,10 @@ class Evaluator:
             "\n| `avgS`: Avg. steps per episode."
             "\n| `objC`: Critic network objective or loss function."
             "\n| `objA`: Actor network objective, avg Q value of critic."
-            f"\n| {'step':>8}  {'time':>8}  | {'avgR':>8}  {'stdR':>6} "
-            f"{'avgS':>6}  | {'objC':>8}  {'objA':>8}"
+            f"\n| `step`:{'step':>8} | `time`:{'time':>8} | "
+            f"`avgR`:{'avgR':>8} | `stdR`:{'stdR':>6} | "
+            f"`avgS`:{'avgS':>6} | `objC`:{'objC':>8} | "
+            f"`objA`:{'objA':>8}"
         )
             
     def evaluate_and_save(
